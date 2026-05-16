@@ -2,25 +2,235 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0a0a0a;
+
+  /* Sampled from header.png + ico.png */
+  --brand-red: #ed1c24;
+  --brand-red-dark: #c5151c;
+  --brand-red-light: #ff3b44;
+  --brand-red-deep: #8a0e13;
+
+  --brand-black: #000000;
+  --brand-ink: #0a0a0a;
+
+  --brand-gray-900: #101316;
+  --brand-gray-800: #1a1f25;
+  --brand-gray-700: #2a313a;
+  --brand-gray-600: #4a525f;
+  --brand-gray-500: #6b7280;
+  --brand-gray-400: #9aa3b2;
+  --brand-gray-300: #d1d5db;
+  --brand-gray-200: #e5e7eb;
+  --brand-gray-100: #f3f4f6;
+  --brand-gray-50: #f8fafc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-brand: var(--brand-red);
+  --color-brand-dark: var(--brand-red-dark);
+  --color-brand-light: var(--brand-red-light);
+  --color-brand-deep: var(--brand-red-deep);
+  --color-ink: var(--brand-ink);
+  --color-black-pure: var(--brand-black);
+  --color-muted: var(--brand-gray-600);
+  --color-subtle: var(--brand-gray-400);
+  --color-line: var(--brand-gray-200);
+  --color-soft: var(--brand-gray-100);
+  --color-cloud: var(--brand-gray-50);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  /* Match the fixed header: 4rem (h-16) on mobile, 5rem (h-20) at lg+ */
+  scroll-padding-top: 4rem;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+@media (min-width: 1024px) {
+  html { scroll-padding-top: 5rem; }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+/* ---- Textures ---- */
+
+/* Fine grain noise overlay — very subtle, adds tactile depth */
+.bg-noise {
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Dotted radial pattern */
+.bg-dots {
+  background-image: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0.06) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+.bg-dots-light {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+
+/* Soft conic / aurora gradient for hero accents */
+.bg-aurora {
+  background:
+    radial-gradient(45% 60% at 80% 0%, rgba(237, 28, 36, 0.35), transparent 60%),
+    radial-gradient(35% 50% at 0% 100%, rgba(237, 28, 36, 0.20), transparent 60%),
+    radial-gradient(30% 45% at 50% 50%, rgba(255, 59, 68, 0.10), transparent 70%);
+}
+
+/* ---- Animations ---- */
+
+/* Smooth fade-up entrance — uses transform/opacity (GPU-accelerated, no layout) */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
+}
+
+/* GPS pulse rings — concentric expanding rings used as decoration */
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Slow drift for floating decorative orbs */
+@keyframes orbDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-18px, 14px, 0) scale(1.06); }
+}
+
+/* Soft gradient shift for the headline gradient */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Card hover top accent — drawn from CSS so JS isn't required */
+@keyframes drawAccent {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Mobile menu container slide-down */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Per-item slide-in from left (staggered) */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Backdrop fade-in for mobile menu */
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: top center;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-backdrop {
+  animation: backdropFade 0.2s ease-out both;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out both;
+}
+.animate-floaty {
+  animation: floaty 6s ease-in-out infinite;
+}
+.animate-orb {
+  animation: orbDrift 12s ease-in-out infinite;
+}
+.animate-pulse-ring {
+  animation: pulseRing 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease-in-out infinite;
+}
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
