@@ -117,8 +117,7 @@ export const products = [
   {
     name: "TrackPro 4G GPS Tracker",
     tagline: "Anti-Jammer GPS with remote engine kill, door lock, and real-time tracking",
-    image: "/products/install-truck.jpg",
-    imageAlt: "TrackPro 4G GPS Tracker installed on an Isuzu cargo truck",
+    imageAlt: "TrackPro 4G GPS Tracker",
     network: "4G LTE",
     bestFor: "Cars · Motorcycles · Trucks · Fleets",
     features: [

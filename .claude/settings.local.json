@@ -13,7 +13,16 @@
       "Bash(curl -s -o /dev/null -w \"logo: %{http_code}\\\\n\" http://localhost:3000/logo.png)",
       "Bash(curl -s -o /dev/null -w \"icon: %{http_code}\\\\n\" http://localhost:3000/icon.png)",
       "WebFetch(domain:www.facebook.com)",
-      "Bash(curl -s -o /dev/null -w \"OG image: %{http_code}\\\\n\" http://localhost:3000/opengraph-image)"
+      "Bash(curl -s -o /dev/null -w \"OG image: %{http_code}\\\\n\" http://localhost:3000/opengraph-image)",
+      "Bash(curl -s -o /dev/null -w \"thanks: %{http_code}\\\\n\" http://localhost:3000/thanks)",
+      "Bash(curl -s -o /dev/null -w \"http://localhost:3000 → %{http_code}\\\\n\" http://localhost:3000)",
+      "Bash(curl -s --max-time 10 -o /dev/null -w \"page: %{http_code}\\\\n\" http://localhost:3000)",
+      "Bash(curl -s --max-time 10 -o /dev/null -w \"thanks: %{http_code}\\\\n\" http://localhost:3000/thanks)",
+      "Bash(netstat -ano)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue)",
+      "Bash(git restore *)",
+      "Bash(curl -s -o /dev/null -w \"page: %{http_code}\\\\n\" --max-time 10 http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"image: %{http_code}\\\\n\" --max-time 10 http://localhost:3000/products/product.jpg)"
     ]
   }
 }
