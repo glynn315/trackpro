@@ -22,7 +22,14 @@
       "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue)",
       "Bash(git restore *)",
       "Bash(curl -s -o /dev/null -w \"page: %{http_code}\\\\n\" --max-time 10 http://localhost:3000)",
-      "Bash(curl -s -o /dev/null -w \"image: %{http_code}\\\\n\" --max-time 10 http://localhost:3000/products/product.jpg)"
+      "Bash(curl -s -o /dev/null -w \"image: %{http_code}\\\\n\" --max-time 10 http://localhost:3000/products/product.jpg)",
+      "Bash(cp d:/Website-Project/trackpro/app/assets/1.png d:/Website-Project/trackpro/public/products/catalog-1.png)",
+      "Bash(cp d:/Website-Project/trackpro/app/assets/2.png d:/Website-Project/trackpro/public/products/catalog-2.png)",
+      "Bash(cp d:/Website-Project/trackpro/app/assets/3.png d:/Website-Project/trackpro/public/products/catalog-3.png)",
+      "Bash(cp d:/Website-Project/trackpro/app/assets/4.png d:/Website-Project/trackpro/public/products/catalog-4.png)",
+      "Bash(rm d:/Website-Project/trackpro/public/products/product.jpg)",
+      "Bash(curl -s -o /dev/null -w \"img1: %{http_code}\\\\n\" --max-time 10 http://localhost:3000/products/catalog-1.png)",
+      "Bash(curl -s -o /dev/null -w \"img4: %{http_code}\\\\n\" --max-time 10 http://localhost:3000/products/catalog-4.png)"
     ]
   }
 }

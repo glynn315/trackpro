@@ -13,18 +13,17 @@ export function Hero() {
       {/* Aurora gradient wash */}
       <div aria-hidden className="absolute inset-0 -z-10 bg-aurora" />
 
-      {/* Floating red orbs */}
+      {/* Static red glows (no animation — keeps the eye calm) */}
       <div
         aria-hidden
-        className="animate-orb pointer-events-none absolute -top-20 right-[10%] -z-10 h-72 w-72 rounded-full opacity-60 blur-3xl"
+        className="pointer-events-none absolute -top-20 right-[10%] -z-10 h-72 w-72 rounded-full opacity-60 blur-3xl"
         style={{ background: "radial-gradient(circle, rgba(237,28,36,0.45) 0%, transparent 70%)" }}
       />
       <div
         aria-hidden
-        className="animate-orb pointer-events-none absolute bottom-10 left-[-5%] -z-10 h-80 w-80 rounded-full opacity-40 blur-3xl"
+        className="pointer-events-none absolute bottom-10 left-[-5%] -z-10 h-80 w-80 rounded-full opacity-40 blur-3xl"
         style={{
           background: "radial-gradient(circle, rgba(237,28,36,0.35) 0%, transparent 70%)",
-          animationDelay: "-4s",
         }}
       />
 
@@ -70,7 +69,7 @@ export function Hero() {
           </p>
           <h1 className="text-balance text-[2.25rem] font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.75rem]">
             Stop your vehicle{" "}
-            <span className="animate-gradient bg-linear-to-r from-brand-light via-brand to-brand-light bg-clip-text text-transparent">
+            <span className="bg-linear-to-br from-brand-light via-brand to-brand-dark bg-clip-text text-transparent">
               anytime, anywhere.
             </span>
           </h1>

@@ -51,6 +51,8 @@ html {
   scroll-padding-top: 4rem;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
+  /* Reserve scrollbar space so locking body scroll (modals) doesn't shift layout */
+  scrollbar-gutter: stable;
 }
 @media (min-width: 1024px) {
   html { scroll-padding-top: 5rem; }
@@ -69,6 +71,15 @@ body {
 ::selection {
   background: var(--brand-red);
   color: #fff;
+}
+
+/* Hide scrollbar but keep scroll behavior (used in thumbnail strip) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* ---- Textures ---- */
@@ -128,14 +139,15 @@ body {
   50% { transform: translate3d(0, -8px, 0); }
 }
 
-/* GPS pulse rings — concentric expanding rings used as decoration */
+/* GPS pulse rings — concentric expanding rings used as decoration.
+   Slower + softer to avoid being a moving distraction. */
 @keyframes pulseRing {
   0% {
-    transform: scale(0.6);
-    opacity: 0.6;
+    transform: scale(0.7);
+    opacity: 0.35;
   }
   100% {
-    transform: scale(2.2);
+    transform: scale(1.8);
     opacity: 0;
   }
 }
@@ -214,7 +226,7 @@ body {
   animation: orbDrift 12s ease-in-out infinite;
 }
 .animate-pulse-ring {
-  animation: pulseRing 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulseRing 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 .animate-gradient {
   background-size: 200% 200%;

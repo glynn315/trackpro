@@ -28,12 +28,12 @@ export function Section({
   return (
     <section
       id={id}
-      className={`py-12 sm:py-16 lg:py-20 ${surfaceMap[surface]} ${className}`}
+      className={`py-10 sm:py-12 lg:py-16 ${surfaceMap[surface]} ${className}`}
       {...rest}
     >
       <Container>
         {(eyebrow || title || description) && (
-          <header className="mx-auto mb-8 max-w-2xl text-center sm:mb-10 lg:mb-12">
+          <header className="mx-auto mb-6 max-w-2xl text-center sm:mb-8 lg:mb-10">
             {eyebrow && (
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-brand sm:text-sm">
                 {eyebrow}

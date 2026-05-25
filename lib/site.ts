@@ -32,6 +32,7 @@ export const navigation = [
   { label: "About", href: "#about", icon: "shield" },
   { label: "Services", href: "#services", icon: "support" },
   { label: "Products", href: "#products", icon: "truck" },
+  { label: "Pricing", href: "#pricing", icon: "chart" },
   { label: "Reviews", href: "#testimonials", icon: "check" },
   { label: "Contact", href: "#contact", icon: "geo" },
 ] as const;
@@ -149,6 +150,67 @@ export const products = [
   },
 ] as const;
 
+/**
+ * Pricing bundles. Set `price` to a string like "3,500" to display it,
+ * or leave it as null to show "Inquire for Pricing" instead.
+ */
+export const bundles = [
+  {
+    name: "Solo",
+    description: "Perfect for 1 car or motorcycle.",
+    price: "3,500" as string | null,
+    priceSuffix: "one-time",
+    badge: null as string | null,
+    features: [
+      "1 × TrackPro 4G GPS Tracker",
+      "Free installation",
+      "Anti-Jammer protection",
+      "Real-time tracking via mobile app",
+      "Remote engine kill & door lock",
+      "1-year hardware warranty",
+      "Local Filipino support",
+    ],
+    ctaLabel: "Get Started",
+    highlighted: false,
+  },
+  {
+    name: "Family",
+    description: "Best for 2 – 3 vehicles in one household.",
+    price: "9,500" as string | null,
+    priceSuffix: "one-time",
+    badge: "Most Popular",
+    features: [
+      "2 – 3 × TrackPro 4G GPS Trackers",
+      "Free installation for all units",
+      "Everything in Solo",
+      "Unified family dashboard",
+      "Group geofencing & alerts",
+      "Priority support",
+      "Volume discount applied",
+    ],
+    ctaLabel: "Get Started",
+    highlighted: true,
+  },
+  {
+    name: "Fleet",
+    description: "For trucking, logistics, and rental businesses.",
+    price: null as string | null,
+    priceSuffix: "custom",
+    badge: null as string | null,
+    features: [
+      "4+ TrackPro 4G GPS Trackers",
+      "Bulk installation on-site",
+      "Everything in Family",
+      "Driver behavior analytics",
+      "Custom reporting (daily / weekly)",
+      "Dedicated account manager",
+      "Volume pricing",
+    ],
+    ctaLabel: "Talk to Sales",
+    highlighted: false,
+  },
+] as const;
+
 export const aboutHighlights = [
   {
     title: "Built to beat modern theft",
@@ -169,3 +231,4 @@ export type NavItem = (typeof navigation)[number];
 export type Service = (typeof services)[number];
 export type Product = (typeof products)[number];
 export type Testimonial = (typeof testimonials)[number];
+export type Bundle = (typeof bundles)[number];

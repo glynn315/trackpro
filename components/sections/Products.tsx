@@ -30,7 +30,7 @@ export function Products() {
       description="One device. Total control. Built to keep your vehicle visible and protected — even against signal jammers."
       surface="white"
     >
-      <article className="relative overflow-hidden rounded-3xl border border-line bg-white shadow-[0_24px_60px_-30px_rgba(0,0,0,0.18)]">
+      <article className="relative overflow-hidden rounded-3xl border border-white/5 bg-[#0a0a0a] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.4)]">
         {/* Top accent stripe */}
         <span
           aria-hidden
@@ -47,52 +47,53 @@ export function Products() {
           )}
 
           {/* Details */}
-          <div className="relative flex flex-col p-7 sm:p-10 lg:p-12">
+          <div className="relative flex flex-col p-7 text-white sm:p-10 lg:p-12">
             {/* Soft red glow tucked behind the content for depth */}
             <div
               aria-hidden
-              className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-40 blur-3xl"
+              className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-50 blur-3xl"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(237,28,36,0.18) 0%, transparent 70%)",
+                  "radial-gradient(circle, rgba(237,28,36,0.32) 0%, transparent 70%)",
               }}
             />
-            <h3 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
+            <div aria-hidden className="bg-noise pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-overlay" />
+            <h3 className="relative text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
               {product.name}
             </h3>
-            <p className="mt-2 text-[15px] leading-relaxed text-muted sm:text-base">
+            <p className="relative mt-2 text-[15px] leading-relaxed text-white/70 sm:text-base">
               {product.tagline}
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-line bg-soft px-3.5 py-1.5 text-xs font-medium text-ink">
+            <div className="relative mt-5 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/6 px-3.5 py-1.5 text-xs font-medium text-white/85 backdrop-blur-sm">
                 <Icon name="truck" className="h-4 w-4 text-brand" />
                 {product.bestFor}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-brand">
+              <span className="inline-flex items-center gap-2 rounded-full border border-brand/40 bg-brand/15 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-light">
                 {product.network}
               </span>
             </div>
 
-            <ul className="mt-7 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+            <ul className="relative mt-7 grid gap-x-6 gap-y-4 sm:grid-cols-2">
               {product.features.map((f) => (
                 <li key={f.title} className="flex items-start gap-3">
-                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand/10 text-brand">
+                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand-light">
                     <Icon name="check" className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-ink">{f.title}</p>
-                    <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{f.body}</p>
+                    <p className="text-sm font-semibold text-white">{f.title}</p>
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-white/60">{f.body}</p>
                   </div>
                 </li>
               ))}
             </ul>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="relative mt-8 flex flex-col gap-3 sm:flex-row">
               <ButtonLink href="#contact" variant="primary" size="lg" className="w-full sm:w-auto">
                 Inquire Now <Icon name="arrow" className="h-4 w-4" />
               </ButtonLink>
-              <ButtonLink href="#contact" variant="secondary" size="lg" className="w-full sm:w-auto">
+              <ButtonLink href="#contact" variant="ghost" size="lg" className="w-full sm:w-auto">
                 Request Installation
               </ButtonLink>
             </div>
