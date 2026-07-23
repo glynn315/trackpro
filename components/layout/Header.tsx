@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { CartIcon } from "@/components/ui/CartIcon";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -98,27 +99,31 @@ export function Header() {
           </ul>
         </nav>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-2 md:flex">
+          <CartIcon />
           <ButtonLink href="#contact" variant="primary" size="md">
             Get a Quote
           </ButtonLink>
         </div>
 
-        <button
-          type="button"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          className="grid h-10 w-10 place-items-center rounded-md text-ink md:hidden"
-          onClick={() => setOpen((v) => !v)}
-        >
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
-            {open ? (
-              <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" />
-            ) : (
-              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-            )}
-          </svg>
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <CartIcon />
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+            className="grid h-10 w-10 place-items-center rounded-md text-ink"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
+              {open ? (
+                <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
+        </div>
       </Container>
 
       {open && (
@@ -165,10 +170,8 @@ export function Header() {
                           }`}
                         />
                         <span
-                          className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-all duration-200 ${
-                            isActive
-                              ? "bg-brand text-white shadow-[0_6px_16px_-6px_rgba(237,28,36,0.55)]"
-                              : "bg-soft text-ink/70 group-hover:bg-ink group-hover:text-white"
+                          className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg text-brand transition-all duration-200 ${
+                            isActive ? "bg-brand/15" : "bg-brand/10 group-hover:bg-brand/15"
                           }`}
                         >
                           <Icon name={item.icon as IconName} className="h-4 w-4" />

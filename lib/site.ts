@@ -7,6 +7,8 @@ export const siteConfig = {
     "TrackPro GPS gives you full control of your vehicle from your phone. With anti-jammer protection, remote engine kill, door lock/unlock, and live tracking, you can secure your car, motorcycle, or fleet against modern theft — even from thieves using signal jammers.",
   url: "https://trackprogps.com",
   locale: "en_PH",
+  currency: "PHP",
+  currencySymbol: "₱",
   location: {
     address: "Brgy. New Ilo-Ilo",
     city: "Tantangan",
@@ -114,45 +116,197 @@ export const services = [
   },
 ] as const;
 
+/**
+ * Product catalog — edit prices/features/descriptions here, the site updates automatically.
+ * `price` and `subscription` are in PHP (₱). `subscription` is monthly.
+ */
 export const products = [
   {
-    name: "TrackPro 4G GPS Tracker",
-    tagline: "Anti-Jammer GPS with remote engine kill, door lock, and real-time tracking",
-    imageAlt: "TrackPro 4G GPS Tracker",
-    network: "4G LTE",
-    bestFor: "Cars · Motorcycles · Trucks · Fleets",
-    features: [
-      {
-        title: "Anti-Jammer Protection",
-        body: "Stays connected even against signal jammers used by modern thieves.",
-      },
-      {
-        title: "Remote Engine Kill",
-        body: "Stop the vehicle anytime, straight from your phone.",
-      },
-      {
-        title: "Door Lock & Unlock",
-        body: "Lock or unlock your vehicle remotely with one tap.",
-      },
-      {
-        title: "Real-Time GPS Tracking",
-        body: "Live location, speed, and route history on mobile and web.",
-      },
-      {
-        title: "Tamper & Ignition Alerts",
-        body: "Instant notifications when the device or ignition is touched.",
-      },
-      {
-        title: "4G LTE Connectivity",
-        body: "Faster, more reliable data than older 2G/3G trackers.",
-      },
+    id: "trackpro-4g-multi-functional",
+    name: "TrackPro 4G Multi-functional GPS",
+    model: "S5L",
+    category: "Vehicle",
+    icon: "map",
+    price: 8999,
+    subscription: 299,
+    tagline: "Powerful 4G real-time vehicle tracker with fuel monitoring and remote engine cut-off.",
+    description:
+      "Designed for both commercial and personal use, TrackPro delivers real-time vehicle monitoring, route playback, speed alerts, geofencing, ACC ignition detection, and anti-theft protection. Integrated fuel sensor support helps reduce fuel theft and optimize fleet operations.",
+    highlights: [
+      "Real-Time GPS Tracking",
+      "2G & 4G Connectivity",
+      "Fuel Sensor Monitoring",
+      "Remote Engine Cut-Off",
+      "Anti-Theft Alarm System",
+      "Multi-Vehicle Fleet Management",
+    ],
+  },
+  {
+    id: "trackpro-magnet-10000",
+    name: "TrackPro Magnet 10,000 mAh GPS",
+    model: "W18L",
+    category: "Asset",
+    icon: "shield",
+    price: 5999,
+    subscription: 299,
+    tagline: "4G LTE tracker with 10,000mAh battery and powerful magnetic mount — for vehicles, cargo, and outdoor use.",
+    description:
+      "High-capacity 10,000mAh rechargeable battery for extended standby. IP67 waterproof with temperature, humidity, light, and tamper sensors. Magnetic mount for flexible deployment.",
+    highlights: [
+      "10,000mAh Long-Life Battery",
+      "Powerful Magnetic Mount",
+      "Temperature & Humidity Sensors",
+      "IP67 Waterproof Protection",
+      "Tamper Alert",
+      "Compact & Portable Design",
+    ],
+  },
+  {
+    id: "trackpro-solar-powered",
+    name: "TrackPro Solar Powered Asset GPS",
+    model: "W20L",
+    category: "Asset",
+    icon: "geo",
+    price: 9999,
+    subscription: 299,
+    tagline: "Solar-powered 4G GPS with 12,000mAh battery — built for fishing vessels, containers, and remote assets.",
+    description:
+      "Heavy-duty 4G GPS tracker with integrated solar charging. 12,000mAh battery and IP67 protection make it ideal for marine, construction, logistics, and long-term asset tracking.",
+    highlights: [
+      "Solar-Powered Charging",
+      "12,000mAh Long-Life Battery",
+      "IP67 Waterproof & Dustproof",
+      "Marine & Fishing Vessel Ready",
+      "Strong Magnetic Mount",
+      "Wireless & Easy Installation",
+    ],
+  },
+  {
+    id: "trackpro-dual-dashcam",
+    name: "TrackPro Dual Dashcam GPS",
+    model: "V7pro",
+    category: "Dashcam",
+    icon: "chart",
+    price: 13999,
+    subscription: 799,
+    tagline: "AI-powered front + rear 2K dashcam with live GPS tracking and SOS button.",
+    description:
+      "Front and rear 2K HD cameras with live video access, AI driving monitoring, route playback, and instant alerts. Includes SOS emergency button for driver safety.",
+    highlights: [
+      "Front & Rear 2K HD Recording",
+      "AI Driving Monitoring",
+      "Live Video Streaming",
+      "SOS Emergency Button",
+      "Night Vision Recording",
+      "Parking Surveillance Mode",
+    ],
+  },
+  {
+    id: "trackpro-4-channel-dashcam",
+    name: "TrackPro 4 Channel Dashcam GPS",
+    model: "V6",
+    category: "Dashcam",
+    icon: "chart",
+    price: 27999,
+    subscription: 999,
+    tagline: "Professional 4-camera fleet surveillance with full vehicle coverage and remote video.",
+    description:
+      "Four HD camera channels for complete vehicle coverage. 4G connectivity, remote video access, and secure storage make it ideal for trucking fleets, buses, taxis, and commercial vehicles.",
+    highlights: [
+      "4-Channel HD Camera Recording",
+      "Full Vehicle Coverage",
+      "Remote Video Playback",
+      "Secure Video Storage",
+      "Night Vision Recording",
+      "Driver Behavior Monitoring",
+    ],
+  },
+  {
+    id: "trackpro-obd2",
+    name: "TrackPro OBD II GPS",
+    model: "R56L",
+    category: "OBD",
+    icon: "power",
+    price: 4999,
+    subscription: 299,
+    tagline: "Plug-and-play 4G OBD II tracker — installs in seconds, no wiring needed.",
+    description:
+      "Compact OBD II tracker for fast installation. Built-in vibration detection for anti-theft, driving behavior monitoring, and route playback. Discreet OEM-style design.",
+    highlights: [
+      "Plug-and-Play OBD II Install",
+      "Vibration & Movement Alarm",
+      "Anti-Theft Protection",
+      "High-Accuracy GPS",
+      "Compact OEM-Style Design",
+      "Low Power Consumption",
+    ],
+  },
+  {
+    id: "trackpro-obd2-system-diagnosis",
+    name: "TrackPro OBD II System Diagnosis GPS",
+    model: "R58L",
+    category: "OBD",
+    icon: "chart",
+    price: 6999,
+    subscription: 299,
+    tagline: "OBD II tracker with vehicle health diagnostics and engine monitoring.",
+    description:
+      "Combines real-time GPS tracking with OBD II vehicle diagnostics — monitor engine performance, driving behavior, and vehicle status for better maintenance and operations.",
+    highlights: [
+      "Vehicle System Diagnosis",
+      "Engine Health Monitoring",
+      "OBD II Plug-and-Play",
+      "Anti-Theft Protection",
+      "Compact Smart Card Design",
+      "Driving Behavior Monitoring",
+    ],
+  },
+  {
+    id: "trackpro-fleet-fuel-rfid",
+    name: "TrackPro Fleet Fuel RFID Temperature GPS",
+    model: "S208L",
+    category: "Fleet",
+    icon: "truck",
+    price: 17999,
+    subscription: 499,
+    tagline: "Pro fleet tracker with remote fuel cut-off, RFID, and temperature monitoring.",
+    description:
+      "Professional-grade fleet management system with remote engine and fuel cut-off, fuel monitoring, temperature sensing, and hidden installation design for trucks, logistics fleets, and refrigerated transport.",
+    highlights: [
+      "Remote Engine & Fuel Cut-Off",
+      "Fuel Level Monitoring",
+      "Temperature Monitoring",
+      "Hidden Anti-Theft Install",
+      "Fleet Management Support",
+      "Stable GSM/GPS Connectivity",
+    ],
+  },
+  {
+    id: "trackpro-premium-anti-jammer",
+    name: "TrackPro Premium Anti-Jammer GPS",
+    model: "G21L",
+    category: "Vehicle",
+    icon: "signal",
+    price: 6999,
+    subscription: 299,
+    tagline: "Flagship anti-jammer tracker with remote door lock/unlock and dual 4G/2G connectivity.",
+    featured: true,
+    description:
+      "Premium 4G/2G GPS with anti-jamming signal protection — stays connected even against signal jammers used by thieves. Remote door lock/unlock, door sensor detection, and vibration alerts for maximum security.",
+    highlights: [
+      "Anti-Jamming Signal Protection",
+      "Remote Door Lock & Unlock",
+      "Dual 4G/2G Connectivity",
+      "Door Sensor Detection",
+      "Vibration & Movement Alerts",
+      "Compact Hidden Install",
     ],
   },
 ] as const;
 
 /**
- * Pricing bundles. Set `price` to a string like "3,500" to display it,
- * or leave it as null to show "Inquire for Pricing" instead.
+ * Pricing bundles — packages combining hardware + service.
+ * Edit `price` (string like "3,500") or set null to show "Inquire for Pricing".
  */
 export const bundles = [
   {
@@ -232,3 +386,8 @@ export type Service = (typeof services)[number];
 export type Product = (typeof products)[number];
 export type Testimonial = (typeof testimonials)[number];
 export type Bundle = (typeof bundles)[number];
+
+/** Format a number as PHP currency, e.g. 8999 → "₱8,999" */
+export function formatPrice(amount: number): string {
+  return `${siteConfig.currencySymbol}${amount.toLocaleString("en-PH")}`;
+}

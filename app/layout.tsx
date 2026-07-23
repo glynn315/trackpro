@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { defaultMetadata, organizationJsonLd } from "@/lib/seo";
+import { CartProvider } from "@/lib/cart";
+import { AuthProvider } from "@/lib/auth";
+import { CartDrawer } from "@/components/ui/CartDrawer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +35,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            <CartDrawer />
+          </CartProvider>
+        </AuthProvider>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
