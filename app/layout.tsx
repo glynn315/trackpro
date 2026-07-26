@@ -5,6 +5,7 @@ import { defaultMetadata, organizationJsonLd } from "@/lib/seo";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { CartDrawer } from "@/components/ui/CartDrawer";
+import { getCatalog } from "@/lib/products";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,9 +27,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // The cart needs the live catalog to price and label admin-created products,
+  // not just the nine hardcoded ones. Shares the same revalidated fetch as the
+  // products grid, so this costs no extra request.
+  const catalog = await getCatalog();
+
   return (
     <html
       lang="en"
@@ -36,7 +42,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <CartProvider>
+          <CartProvider catalog={catalog}>
             {children}
             <CartDrawer />
           </CartProvider>

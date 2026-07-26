@@ -9,7 +9,8 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { products, type Product } from "@/lib/site";
+import { products as staticProducts } from "@/lib/site";
+import type { CatalogProduct } from "@/lib/products";
 
 const STORAGE_KEY = "trackpro:cart";
 
@@ -21,7 +22,7 @@ export type CartItem = {
 };
 
 export type CartLine = CartItem & {
-  product: Product;
+  product: CatalogProduct;
   lineTotal: number;
   subscriptionTotal: number;
 };
@@ -43,21 +44,53 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const productById = (id: string) => products.find((p) => p.id === id);
+/**
+ * Static catalog shaped like a CatalogProduct, used only when no live catalog
+ * was passed in (e.g. the API was down when the page was rendered).
+ */
+const STATIC_FALLBACK: CatalogProduct[] = staticProducts.map((p) => ({
+  ...p,
+  featured: "featured" in p ? Boolean(p.featured) : false,
+  stock: null,
+  inStock: true,
+}));
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({
+  children,
+  catalog,
+}: {
+  children: ReactNode;
+  /**
+   * Live catalog from the server. Required for admin-created products to be
+   * addable to the cart — without it the cart can only resolve the nine
+   * hardcoded products in `lib/site.ts`.
+   */
+  catalog?: CatalogProduct[];
+}) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage on mount
+  const productById = useCallback(
+    (id: string) => {
+      const source = catalog && catalog.length > 0 ? catalog : STATIC_FALLBACK;
+      return source.find((p) => p.id === id);
+    },
+    [catalog]
+  );
+
+  // Hydrate from localStorage on mount.
+  // Stored ids are kept as-is rather than filtered against the catalog — an id
+  // we can't resolve right now is simply skipped by `lines` below, so a product
+  // isn't silently dropped from someone's cart just because the catalog was
+  // momentarily unavailable. Checkout re-validates against live stock.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as CartItem[];
         if (Array.isArray(parsed)) {
-          setItems(parsed.filter((it) => productById(it.productId)));
+          setItems(parsed.filter((it) => typeof it?.productId === "string" && it.qty > 0));
         }
       }
     } catch {
@@ -118,7 +151,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           };
         })
         .filter((l): l is CartLine => l !== null),
-    [items]
+    [items, productById]
   );
 
   const itemCount = useMemo(() => lines.reduce((sum, l) => sum + l.qty, 0), [lines]);

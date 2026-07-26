@@ -1,17 +1,25 @@
 import type { ReactElement } from "react";
 
-type IconName =
-  | "map"
-  | "truck"
-  | "shield"
-  | "geo"
-  | "support"
-  | "chart"
-  | "check"
-  | "arrow"
-  | "power"
-  | "lock"
-  | "signal";
+/**
+ * Every icon this component can render. Exported as a runtime value so
+ * admin-managed products (whose `icon` is free text) can be validated
+ * against it — see `normalizeIcon` in `lib/products.ts`.
+ */
+export const iconNames = [
+  "map",
+  "truck",
+  "shield",
+  "geo",
+  "support",
+  "chart",
+  "check",
+  "arrow",
+  "power",
+  "lock",
+  "signal",
+] as const;
+
+type IconName = (typeof iconNames)[number];
 
 const paths: Record<IconName, ReactElement> = {
   map: (
