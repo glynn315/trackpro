@@ -1,5 +1,6 @@
 import { products as staticProducts } from "@/lib/site";
 import { iconNames, type IconName } from "@/components/ui/Icon";
+import { API_BASE } from "@/lib/api-base";
 
 /**
  * A catalog product as the storefront renders it.
@@ -43,8 +44,6 @@ type ApiProduct = {
   is_active: boolean;
 };
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-
 const KNOWN_ICONS = new Set<string>(iconNames);
 const DEFAULT_ICON: IconName = "map";
 
@@ -55,8 +54,7 @@ const DEFAULT_ICON: IconName = "map";
  * up, including ones created in the admin dashboard that have no entry in the
  * curated static catalog. The static catalog is used two ways — as a per-field
  * fallback for rows with blanks, and as the whole catalog when the API is
- * unreachable (or NEXT_PUBLIC_API_URL is unset) so the marketing site never
- * renders an empty products grid.
+ * unreachable so the marketing site never renders an empty products grid.
  */
 export async function getCatalog(): Promise<CatalogProduct[]> {
   const live = await fetchLiveProducts();
@@ -117,7 +115,6 @@ function normalizeIcon(icon?: string | null): string {
 }
 
 async function fetchLiveProducts(): Promise<ApiProduct[] | null> {
-  if (!API_BASE) return null;
   try {
     const res = await fetch(`${API_BASE}/api/products`, { next: { revalidate: 60 } });
     if (!res.ok) return null;

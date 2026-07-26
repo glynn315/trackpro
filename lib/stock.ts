@@ -1,4 +1,4 @@
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+import { API_BASE } from "@/lib/api-base";
 
 export type StockIssue = {
   productId: string;
@@ -32,7 +32,7 @@ type ApiProduct = { slug: string; stock: number; is_active: boolean };
 export async function checkCartStock(
   items: CartLineLike[]
 ): Promise<StockIssue[]> {
-  if (!API_BASE || items.length === 0) return [];
+  if (items.length === 0) return [];
 
   let products: ApiProduct[];
   try {

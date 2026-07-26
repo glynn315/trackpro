@@ -24,6 +24,7 @@ These are secrets/config that are **not** in the repo and only you can supply on
 | `trackpro-api/.env` | `APP_URL` | `https://your-api-domain` |
 | `trackpro-api/.env` | `DB_*` | production MySQL host / db / user / password |
 | `trackpro-api/.env` | `FRONTEND_URL` | comma-separated frontend origins, e.g. `https://trackprogps.com,https://www.trackprogps.com` — **drives CORS** |
+| `trackpro-api/.env` | `FRONTEND_URL_PATTERNS` | *optional* — regexes for build-generated origins (Vercel previews). Leave empty to allow only the exact origins above |
 | `trackpro-api/.env` | `MAIL_PASSWORD` | real Gmail **App Password** (16 chars) — email verification fails without it |
 | `trackpro-api/.env` | `PAYMONGO_SECRET_KEY` / `PAYMONGO_PUBLIC_KEY` / `PAYMONGO_WEBHOOK_SECRET` | live keys from the PayMongo dashboard |
 | `trackpro-api/.env` | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | admin login — use a **strong** password before seeding |
@@ -72,11 +73,48 @@ php artisan queue:work --tries=3
 
 ## 3. Frontend — Next.js (`trackpro`)
 
+Self-hosted:
+
 ```bash
 npm ci
 npm run build
 npm run start        # serves on $PORT
 ```
+
+### Deploying to Vercel
+
+Only the Next.js app goes to Vercel — Laravel stays on its PHP host. `trackpro/`
+is its own git repo (`github.com/glynn315/trackpro`), so **Root Directory** is the
+repo root (leave it at the default).
+
+```bash
+npm i -g vercel              # or prefix every command below with `npx`
+vercel login                 # interactive — opens a browser
+vercel link                  # creates/links the Vercel project
+
+# Three env vars, for both production and preview:
+vercel env add NEXT_PUBLIC_API_URL production
+vercel env add API_URL production
+vercel env add NEXT_PUBLIC_WEB3FORMS_KEY production
+
+vercel env ls                # confirm
+vercel deploy --prod
+```
+
+Or import the GitHub repo in the dashboard so pushes to `master` auto-deploy, and
+paste the vars under **Settings → Environment Variables**.
+
+Then, back on the Laravel host, add the Vercel origin to `FRONTEND_URL` and
+re-run `php artisan config:clear && php artisan config:cache`. Without this,
+checkout, order submission, and customer login all fail CORS (they run in the
+browser). The products grid still works — it's fetched server-side.
+
+**Gotcha:** `NEXT_PUBLIC_*` vars are inlined into the client bundle at build
+time. Editing one on Vercel does nothing until you redeploy.
+
+**Previews:** each preview build gets a random subdomain, so it can never match a
+fixed `FRONTEND_URL`. To make previews fully work, set `FRONTEND_URL_PATTERNS`
+on the API host, e.g. `#^https://trackpro-[a-z0-9-]+\.vercel\.app$#`.
 
 ## 4. First login
 

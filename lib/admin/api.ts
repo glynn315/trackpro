@@ -1,18 +1,21 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { getAdminToken } from "./session";
+import { DEFAULT_API_BASE } from "@/lib/api-base";
 
+// `||` rather than `??` so a variable that is present but empty falls through
+// instead of producing a broken base URL.
 const BASE = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://127.0.0.1:8000"
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  DEFAULT_API_BASE
 ).replace(/\/$/, "");
 
 type ApiInit = Omit<RequestInit, "body"> & { json?: unknown };
 
 const UNREACHABLE =
-  `Cannot reach the backend API at ${BASE}. Make sure the Laravel server is running ` +
-  `(cd trackpro-api && php artisan serve).`;
+  `Cannot reach the backend API at ${BASE}. If that's a local address, start Laravel ` +
+  `(cd trackpro-api && php artisan serve); otherwise check the host is up and API_URL is correct.`;
 
 /** Server-side fetch to the Laravel admin API with the admin Bearer token attached. */
 export async function adminApi(path: string, init: ApiInit = {}): Promise<Response> {

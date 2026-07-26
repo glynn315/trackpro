@@ -8,9 +8,9 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { formatPrice, siteConfig } from "@/lib/site";
 import { checkCartStock, describeStockIssue, type StockIssue } from "@/lib/stock";
+import { API_BASE } from "@/lib/api-base";
 
 const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY ?? "";
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 type Status = "idle" | "submitting" | "success" | "error";
 type PlacedOrder = { reference: string; total: number };
@@ -73,12 +73,6 @@ export function CheckoutModal({
     if (issues.length > 0) {
       setStockIssues(issues);
       setStatus("idle");
-      return;
-    }
-
-    if (!API_BASE) {
-      setStatus("error");
-      setErrorMessage("Online ordering is temporarily unavailable.");
       return;
     }
 
@@ -149,7 +143,7 @@ export function CheckoutModal({
   }
 
   async function payTemporary() {
-    if (!order || !API_BASE) return;
+    if (!order) return;
     setPaying("paying");
     try {
       const res = await fetch(
