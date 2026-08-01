@@ -5,11 +5,17 @@ import { DEFAULT_API_BASE } from "@/lib/api-base";
 
 // `||` rather than `??` so a variable that is present but empty falls through
 // instead of producing a broken base URL.
-const BASE = (
+//
+// Trailing `/api` is stripped as well as trailing slashes: setting API_URL to
+// `https://host/api` is an easy mistake, and every path here already starts with
+// `/api`, so it would silently request `/api/api/...` and 404 on everything.
+export const BASE = (
   process.env.API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   DEFAULT_API_BASE
-).replace(/\/$/, "");
+)
+  .replace(/\/+$/, "")
+  .replace(/\/api$/, "");
 
 type ApiInit = Omit<RequestInit, "body"> & { json?: unknown };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
@@ -32,6 +33,12 @@ export function CheckoutModal({
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
   const [paying, setPaying] = useState<"idle" | "paying" | "error">("idle");
+  // The yearly tracking subscription the paid order provisions, if any.
+  const [subscription, setSubscription] = useState<{
+    plan_name: string;
+    price: number;
+    renews_at: string;
+  } | null>(null);
 
   // Esc + body scroll lock
   useEffect(() => {
@@ -148,9 +155,20 @@ export function CheckoutModal({
     try {
       const res = await fetch(
         `${API_BASE}/api/orders/${encodeURIComponent(order.reference)}/pay`,
-        { method: "POST", headers: { Accept: "application/json" } }
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            // The route is owner-only behind auth:sanctum — without the token it 401s.
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
       );
       if (!res.ok) throw new Error();
+      // Paying provisions the yearly tracking subscription; surface it so the
+      // renewal date isn't a surprise a year from now.
+      const body = await res.json().catch(() => null);
+      setSubscription(body?.subscription ?? null);
       setPaid(true);
       setPaying("idle");
     } catch {
@@ -223,11 +241,35 @@ export function CheckoutModal({
 
             {/* Payment */}
             {paid ? (
-              <div className="mx-auto mt-5 max-w-sm rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-                <p className="font-semibold">Payment received (temporary)</p>
-                <p className="mt-1">
-                  Your order is marked as paid. We&apos;ll confirm delivery and installation shortly.
-                </p>
+              <div className="mx-auto mt-5 max-w-sm space-y-3">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                  <p className="font-semibold">Payment received (temporary)</p>
+                  <p className="mt-1">
+                    Your order is marked as paid. We&apos;ll confirm delivery and installation shortly.
+                  </p>
+                </div>
+                {subscription && (
+                  <div className="rounded-xl border border-line bg-cloud p-4 text-left text-sm">
+                    <p className="font-semibold text-ink">Tracking subscription active</p>
+                    <p className="mt-1 text-xs text-muted">
+                      {subscription.plan_name} — included until{" "}
+                      <span className="font-semibold text-ink">
+                        {new Date(subscription.renews_at).toLocaleDateString("en-PH", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                      , then {formatPrice(subscription.price)} per year.
+                    </p>
+                    <Link
+                      href="/account/subscription"
+                      className="mt-2 inline-block text-xs font-semibold text-brand hover:underline"
+                    >
+                      Manage it in My Account →
+                    </Link>
+                  </div>
+                )}
               </div>
             ) : checkoutUrl ? (
               <div className="mx-auto mt-5 max-w-sm">

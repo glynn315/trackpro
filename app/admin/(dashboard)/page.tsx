@@ -13,7 +13,8 @@ const paymentBadge: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
-  const { stats, recent_orders, low_stock } = await adminGet<DashboardData>("/api/admin/dashboard");
+  const { stats, recent_orders, low_stock, subscriptions } =
+    await adminGet<DashboardData>("/api/admin/dashboard");
 
   return (
     <>
@@ -34,6 +35,26 @@ export default async function DashboardPage() {
             }
           />
         </div>
+
+        {/* Yearly subscriptions at a glance */}
+        <section className="mt-6 rounded-2xl border border-gray-200 bg-white">
+          <header className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+            <h2 className="font-bold">Subscriptions</h2>
+            <Link href="/admin/subscriptions" className="text-sm font-semibold text-brand hover:underline">
+              Manage →
+            </Link>
+          </header>
+          <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+            <MiniStat label="Active" value={String(subscriptions.active)} />
+            <MiniStat label="Recurring / Year" value={peso(subscriptions.arr)} accent />
+            <MiniStat
+              label="Renewals in 30 Days"
+              value={String(subscriptions.renewals_due_soon)}
+              hint={subscriptions.past_due > 0 ? `${subscriptions.past_due} past due` : undefined}
+            />
+            <MiniStat label="Unpaid Renewals" value={peso(subscriptions.outstanding)} />
+          </div>
+        </section>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <section className="rounded-2xl border border-gray-200 bg-white lg:col-span-2">
@@ -84,6 +105,26 @@ export default async function DashboardPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function MiniStat({
+  label,
+  value,
+  hint,
+  accent,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
+      <p className={`mt-1 text-xl font-extrabold tracking-tight ${accent ? "text-brand" : ""}`}>{value}</p>
+      {hint && <p className="text-xs font-semibold text-red-600">{hint}</p>}
+    </div>
   );
 }
 

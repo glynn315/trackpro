@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
@@ -168,6 +169,16 @@ export function AuthModal({
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               hint={mode === "signup" ? "At least 6 characters" : undefined}
             />
+            {mode === "signin" && (
+              <p className="text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-semibold text-brand hover:text-brand-dark"
+                >
+                  Forgot your password?
+                </Link>
+              </p>
+            )}
           </div>
 
           {error && (

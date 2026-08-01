@@ -42,6 +42,15 @@ type AuthContextValue = {
   signOut: () => void;
   resendVerification: () => Promise<void>;
   refresh: () => Promise<void>;
+  /** Emails a reset link. Resolves with the API's (deliberately vague) message. */
+  requestPasswordReset: (email: string) => Promise<string>;
+  /** Completes a reset from the emailed link and signs the customer in. */
+  resetPassword: (input: {
+    token: string;
+    email: string;
+    password: string;
+    passwordConfirmation: string;
+  }) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -167,9 +176,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) await refreshWith(token);
   }, [token, refreshWith]);
 
+  const requestPasswordReset: AuthContextValue["requestPasswordReset"] = useCallback(
+    async (email) => {
+      const res = await fetch(`${API_BASE}/api/customer/password/forgot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error(await parseError(res, "Could not send the reset link."));
+      const { message } = await res.json();
+      return (message as string) ?? "If that email is registered, a reset link is on its way.";
+    },
+    []
+  );
+
+  const resetPassword: AuthContextValue["resetPassword"] = useCallback(
+    async ({ token: resetToken, email, password, passwordConfirmation }) => {
+      const res = await fetch(`${API_BASE}/api/customer/password/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          token: resetToken,
+          email,
+          password,
+          password_confirmation: passwordConfirmation,
+        }),
+      });
+      if (!res.ok) throw new Error(await parseError(res, "Could not reset your password."));
+      // The API hands back a fresh token, so the reset doubles as a sign-in.
+      const { customer, token: tok } = await res.json();
+      persist(tok, mapUser(customer));
+    },
+    [persist]
+  );
+
   return (
     <AuthContext.Provider
-      value={{ user, token, hydrated, signUp, signIn, signOut, resendVerification, refresh }}
+      value={{
+        user,
+        token,
+        hydrated,
+        signUp,
+        signIn,
+        signOut,
+        resendVerification,
+        refresh,
+        requestPasswordReset,
+        resetPassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

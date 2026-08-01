@@ -1,17 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { navigation, siteConfig } from "@/lib/site";
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { CartIcon } from "@/components/ui/CartIcon";
+import { AccountLink } from "@/components/ui/AccountLink";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string>("home");
+  const pathname = usePathname();
+
+  // The nav points at homepage sections. Away from "/" (account, auth, thanks)
+  // a bare "#about" would do nothing, so send those visitors home first.
+  const onHome = pathname === "/";
+  const sectionHref = (hash: string) => (onHome ? hash : `/${hash}`);
 
   // Scroll shadow / blur state
   useEffect(() => {
@@ -23,6 +31,7 @@ export function Header() {
 
   // Active section tracking via IntersectionObserver
   useEffect(() => {
+    if (!onHome) return;
     const ids = navigation.map((n) => n.href.replace("#", ""));
     const sections = ids
       .map((id) => document.getElementById(id))
@@ -46,7 +55,7 @@ export function Header() {
     );
     sections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();
-  }, []);
+  }, [onHome]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -68,7 +77,7 @@ export function Header() {
       }`}
     >
       <Container className="flex h-16 items-center justify-between lg:h-20">
-        <a href="#home" aria-label={`${siteConfig.name} home`} className="shrink-0">
+        <a href={sectionHref("#home")} aria-label={`${siteConfig.name} home`} className="shrink-0">
           <Logo priority />
         </a>
 
@@ -76,11 +85,11 @@ export function Header() {
           <ul className="flex items-center gap-7 lg:gap-9">
             {navigation.map((item) => {
               const id = item.href.replace("#", "");
-              const isActive = active === id;
+              const isActive = onHome && active === id;
               return (
                 <li key={item.href}>
                   <a
-                    href={item.href}
+                    href={sectionHref(item.href)}
                     aria-current={isActive ? "page" : undefined}
                     className={`relative py-2 text-sm font-medium transition-colors duration-200 ${
                       isActive ? "text-brand" : "text-ink/75 hover:text-ink"
@@ -101,7 +110,8 @@ export function Header() {
 
         <div className="hidden items-center gap-2 md:flex">
           <CartIcon />
-          <ButtonLink href="#contact" variant="primary" size="md">
+          <AccountLink />
+          <ButtonLink href={sectionHref("#contact")} variant="primary" size="md">
             Get a Quote
           </ButtonLink>
         </div>
@@ -145,7 +155,7 @@ export function Header() {
               <ul className="flex flex-col gap-1">
                 {navigation.map((item, i) => {
                   const id = item.href.replace("#", "");
-                  const isActive = active === id;
+                  const isActive = onHome && active === id;
                   return (
                     <li
                       key={item.href}
@@ -153,7 +163,7 @@ export function Header() {
                       style={{ animationDelay: `${i * 50}ms` }}
                     >
                       <a
-                        href={item.href}
+                        href={sectionHref(item.href)}
                         onClick={() => setOpen(false)}
                         aria-current={isActive ? "page" : undefined}
                         className={`group relative flex items-center gap-3 overflow-hidden rounded-xl px-3.5 py-3 text-[15px] font-medium transition-all duration-200 ${
@@ -192,8 +202,11 @@ export function Header() {
               </ul>
               <div className="my-3 h-px bg-line" />
               <div className="animate-slide-in-left px-1 pb-1" style={{ animationDelay: `${navigation.length * 50}ms` }}>
+                <div className="mb-3">
+                  <AccountLink onNavigate={() => setOpen(false)} />
+                </div>
                 <ButtonLink
-                  href="#contact"
+                  href={sectionHref("#contact")}
                   variant="primary"
                   size="md"
                   className="w-full"

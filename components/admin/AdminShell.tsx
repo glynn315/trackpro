@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { logoutAction } from "@/lib/admin/actions";
+import { usePathname, useRouter } from "next/navigation";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Logo } from "@/components/ui/Logo";
 
@@ -15,6 +14,7 @@ export function AdminShell({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   // Close the drawer on navigation.
   useEffect(() => {
@@ -81,9 +81,19 @@ export function AdminShell({
         <div className="border-t border-white/10 p-4 text-xs">
           <p className="font-semibold text-white">{admin.name}</p>
           <p className="mt-0.5 truncate text-white/60">{admin.email}</p>
-          <form action={logoutAction} className="mt-3">
-            <button className="text-white/70 underline hover:text-brand">Sign out</button>
-          </form>
+          {/* Same reasoning as sign-in: a plain DELETE survives proxied hosts
+              where a Server Action's Origin/Host check would not. */}
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch("/api/admin/session", { method: "DELETE" }).catch(() => {});
+              router.replace("/admin/login");
+              router.refresh();
+            }}
+            className="mt-3 text-white/70 underline hover:text-brand"
+          >
+            Sign out
+          </button>
         </div>
       </aside>
 

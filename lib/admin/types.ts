@@ -86,6 +86,95 @@ export type ExpensesResponse = {
   category_total: number;
 };
 
+/* ------------------------------------------------ yearly subscriptions */
+
+export type AdminSubscriptionPlan = {
+  id: number;
+  slug: string;
+  name: string;
+  description: string | null;
+  price: number;
+  billing_period: "yearly" | "monthly";
+  features: string[] | null;
+  is_default: boolean;
+  is_active: boolean;
+  subscriptions_count?: number;
+  active_subscriptions_count?: number;
+};
+
+export type AdminSubscriptionStatus = "pending" | "active" | "past_due" | "expired" | "cancelled";
+
+export type AdminSubscription = {
+  id: number;
+  reference: string;
+  customer: { id: number; name: string; email: string; phone: string | null } | null;
+  plan_name: string;
+  billing_period: "yearly" | "monthly";
+  quantity: number;
+  unit_price: number;
+  price: number;
+  status: AdminSubscriptionStatus;
+  starts_at: string;
+  renews_at: string;
+  days_until_renewal: number;
+  auto_renew: boolean;
+  last_paid_at: string | null;
+  unpaid_invoices_count: number;
+  order_reference: string | null;
+  notes: string | null;
+};
+
+export type SubscriptionStats = {
+  total: number;
+  active: number;
+  past_due: number;
+  expired: number;
+  cancelled: number;
+  devices_covered: number;
+  arr: number;
+  renewals_due_soon: number;
+  outstanding: number;
+  collected_this_year: number;
+};
+
+export type SubscriptionsResponse = {
+  data: AdminSubscription[];
+  meta: PageMeta;
+  stats: SubscriptionStats;
+  plans: Pick<AdminSubscriptionPlan, "id" | "slug" | "name" | "price" | "billing_period" | "is_active">[];
+};
+
+export type AdminSubscriptionInvoice = {
+  id: number;
+  reference: string;
+  customer: { id: number; name: string; email: string } | null;
+  subscription: { id: number; reference: string; plan_name: string } | null;
+  description: string;
+  amount: number;
+  period_start: string;
+  period_end: string;
+  due_date: string;
+  status: "unpaid" | "awaiting" | "paid" | "void";
+  provider: string | null;
+  payment_method: string | null;
+  checkout_url: string | null;
+  paid_at: string | null;
+  is_overdue: boolean;
+};
+
+export type SubscriptionInvoicesResponse = {
+  data: AdminSubscriptionInvoice[];
+  meta: PageMeta;
+  totals: { outstanding: number; overdue: number; collected_this_year: number };
+};
+
+export type AdminCustomer = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+};
+
 export type DashboardData = {
   stats: {
     orders_total: number;
@@ -107,4 +196,11 @@ export type DashboardData = {
     created_at: string;
   }[];
   low_stock: { id: number; model: string; name: string; stock: number }[];
+  subscriptions: {
+    active: number;
+    past_due: number;
+    arr: number;
+    renewals_due_soon: number;
+    outstanding: number;
+  };
 };
