@@ -45,7 +45,7 @@ export function NewSubscriptionForm({
           </select>
           {customers.length === 0 && (
             <p className="mt-1 text-xs text-amber-700">
-              No customer accounts yet. The customer must register on the storefront first.
+              No customer accounts yet. Add one under Clients, or have the customer register on the storefront.
             </p>
           )}
         </div>

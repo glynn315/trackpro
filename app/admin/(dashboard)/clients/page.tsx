@@ -4,6 +4,7 @@ import { Pagination } from "@/components/admin/Pagination";
 import { peso } from "@/lib/admin/format";
 import { adminGet } from "@/lib/admin/api";
 import type { AdminClient, PageMeta } from "@/lib/admin/types";
+import { NewClientForm } from "./NewClientForm";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ function fmtDate(d: string) {
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; page?: string }>;
+  searchParams: Promise<{ search?: string; page?: string; saved?: string; error?: string }>;
 }) {
   const sp = await searchParams;
   const qs = new URLSearchParams();
@@ -33,11 +34,24 @@ export default async function ClientsPage({
     <>
       <PageHeader title="Clients" />
       <div className="p-5 lg:p-8">
+        {sp.saved && (
+          <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {sp.saved}
+          </div>
+        )}
+        {sp.error && (
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {sp.error}
+          </div>
+        )}
+
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
           <Stat label="Total Clients" value={totals.clients} />
           <Stat label="With Active Plan" value={totals.with_active_plan} tone="text-emerald-700" />
           <Stat label="New This Month" value={totals.new_this_month} tone="text-brand" />
         </div>
+
+        <NewClientForm />
 
         <form className="mb-5 flex flex-wrap gap-3">
           <input
