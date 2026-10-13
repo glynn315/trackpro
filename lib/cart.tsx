@@ -50,6 +50,7 @@ const CartContext = createContext<CartContextValue | null>(null);
  */
 const STATIC_FALLBACK: CatalogProduct[] = staticProducts.map((p) => ({
   ...p,
+  media: [],
   featured: "featured" in p ? Boolean(p.featured) : false,
   stock: null,
   inStock: true,

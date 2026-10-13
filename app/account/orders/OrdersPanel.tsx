@@ -86,7 +86,7 @@ export function OrdersPanel() {
           message="Buy a TrackPro device and your yearly tracking subscription starts automatically."
           action={
             <Link
-              href="/#products"
+              href="/products"
               className="inline-flex h-10 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark"
             >
               Browse devices

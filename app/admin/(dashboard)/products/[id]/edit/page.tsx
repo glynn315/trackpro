@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { MediaField } from "@/components/admin/MediaField";
 import { adminApi } from "@/lib/admin/api";
 import type { AdminProduct } from "@/lib/admin/types";
 import { updateProduct } from "../../actions";
@@ -33,7 +34,7 @@ export default async function EditProductPage({
       <div className="p-5 lg:p-8">
         <form action={updateProduct.bind(null, product.id)} className="max-w-2xl space-y-5 rounded-2xl border border-gray-200 bg-white p-7">
           <div className="border-b border-gray-100 pb-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Model {product.model} · {product.category}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{product.model} · {product.category}</p>
             <h2 className="mt-1 text-2xl font-extrabold">{product.name}</h2>
             <p className="mt-1 text-sm text-gray-600">{product.tagline}</p>
           </div>
@@ -57,6 +58,10 @@ export default async function EditProductPage({
                 <option value="0">No</option>
                 <option value="1">Yes — Flagship</option>
               </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">Photos &amp; video clips</label>
+              <MediaField initial={product.media ?? []} />
             </div>
             <div className="sm:col-span-2">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">Visibility</label>

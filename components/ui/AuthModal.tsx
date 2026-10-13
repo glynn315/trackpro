@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { CompanyField, FleetFields, TermsAgreement, readSignup } from "@/components/auth/SignupFields";
 
 type Mode = "signin" | "signup";
 
@@ -46,12 +47,7 @@ export function AuthModal({
 
     try {
       if (mode === "signup") {
-        await signUp({
-          name: String(formData.get("name") ?? ""),
-          email: String(formData.get("email") ?? ""),
-          phone: String(formData.get("phone") ?? ""),
-          password: String(formData.get("password") ?? ""),
-        });
+        await signUp(readSignup(formData));
       } else {
         await signIn({
           email: String(formData.get("email") ?? ""),
@@ -76,11 +72,11 @@ export function AuthModal({
       onClick={(e) => {
         if (e.target === e.currentTarget && !submitting) onClose();
       }}
-      className="animate-fade-in fixed inset-0 z-110 flex items-center justify-center overflow-y-auto bg-ink/70 p-4 backdrop-blur-sm sm:p-6"
+      className="animate-fade-in fixed inset-0 z-110 flex items-start justify-center overflow-y-auto bg-ink/70 p-4 backdrop-blur-sm sm:p-6"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="animate-fade-up relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_28px_80px_-20px_rgba(0,0,0,0.4)]"
+        className="animate-fade-up relative my-auto w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_28px_80px_-20px_rgba(0,0,0,0.4)]"
       >
         {/* Header */}
         <div className="relative border-b border-line bg-linear-to-br from-ink via-[#141414] to-ink p-6 text-white sm:p-7">
@@ -144,6 +140,7 @@ export function AuthModal({
             {mode === "signup" && (
               <>
                 <Field label="Full name" name="name" type="text" required autoComplete="name" />
+                <CompanyField />
                 <Field
                   label="Contact number"
                   name="phone"
@@ -161,6 +158,7 @@ export function AuthModal({
               autoComplete="email"
               placeholder="you@email.com"
             />
+            {mode === "signup" && <FleetFields />}
             <Field
               label="Password"
               name="password"
@@ -169,6 +167,7 @@ export function AuthModal({
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               hint={mode === "signup" ? "At least 6 characters" : undefined}
             />
+            {mode === "signup" && <TermsAgreement />}
             {mode === "signin" && (
               <p className="text-right">
                 <Link

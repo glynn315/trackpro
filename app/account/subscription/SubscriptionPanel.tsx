@@ -161,7 +161,7 @@ export function SubscriptionPanel() {
 
       {/* Plans — how a customer adds coverage without buying hardware. */}
       {plans.length > 0 && (
-        <Card title={live.length === 0 ? "Choose a yearly plan" : "Add another yearly plan"}>
+        <Card title={live.length === 0 ? "Choose a plan" : "Add another plan"}>
           <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
             {plans.map((plan) => (
               <PlanCard
@@ -224,7 +224,7 @@ function SubscriptionCard({
           <Row label="Billing" value={sub.billing_period === "yearly" ? "Once a year" : "Monthly"} />
           <Row
             label="Devices covered"
-            value={`${sub.quantity} × ${peso(sub.unit_price)} per year`}
+            value={`${sub.quantity} × ${peso(sub.unit_price)} per ${sub.billing_period === "yearly" ? "year" : "month"}`}
           />
           <Row label="Started" value={formatDate(sub.starts_at)} />
           <Row
@@ -324,7 +324,7 @@ function PlanCard({
     <div className="flex flex-col rounded-xl border border-line bg-white p-4">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-bold text-ink">{plan.name}</h3>
-        {plan.is_default && (
+        {plan.is_popular && (
           <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand">
             Popular
           </span>

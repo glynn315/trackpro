@@ -4,11 +4,10 @@ import { peso } from "@/lib/admin/format";
 import { adminGet } from "@/lib/admin/api";
 import type { ExpensesResponse, PeriodFlow } from "@/lib/admin/types";
 import { createExpense } from "./actions";
+import { ExpenseTabs } from "./ExpenseTabs";
 import { ExpensesList } from "./ExpensesList";
 
 export const dynamic = "force-dynamic";
-
-const CATEGORIES = ["Inventory", "Salaries", "Rent", "Utilities", "Marketing", "Logistics", "Other"];
 
 const inputCls =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20";
@@ -19,15 +18,19 @@ export default async function ExpensesPage({
   searchParams: Promise<{ saved?: string; error?: string; page?: string }>;
 }) {
   const { saved, error, page } = await searchParams;
-  const { data, meta, cashflow } = await adminGet<ExpensesResponse>(
+  const { data, meta, cashflow, options } = await adminGet<ExpensesResponse>(
     `/api/admin/expenses${page ? `?page=${page}` : ""}`
   );
-  const today = new Date().toISOString().slice(0, 10);
+  // Today in Philippine time (the server may run in UTC).
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+  const strict = options.categories.filter((c) => c.requires_reference).map((c) => c.name);
+  const defaultWallet = options.wallets.find((w) => w.is_default) ?? options.wallets[0];
 
   return (
     <>
       <PageHeader title="Expenses & Cashflow" />
       <div className="p-5 lg:p-8">
+        <ExpenseTabs />
         {saved && (
           <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             Expense recorded.
@@ -35,7 +38,7 @@ export default async function ExpensesPage({
         )}
         {error && (
           <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            Could not save the expense — check the fields and try again.
+            Could not save the expense — {error !== "1" ? error : "check the fields and try again."}
           </div>
         )}
 
@@ -56,23 +59,49 @@ export default async function ExpensesPage({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Category</Label>
-                  <select name="category" className={inputCls} defaultValue="Inventory">
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  <select name="expense_category_id" required className={inputCls} defaultValue={options.categories[0]?.id}>
+                    {options.categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <Label>Amount (₱)</Label>
-                  <input name="amount" type="number" min={0} required defaultValue={0} className={inputCls} />
+                  <Label>Paid from</Label>
+                  <select name="wallet_id" required className={inputCls} defaultValue={defaultWallet?.id}>
+                    {options.wallets.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div>
-                <Label>Date</Label>
-                <input name="incurred_on" type="date" required defaultValue={today} className={inputCls} />
+                <Label>Amount (₱)</Label>
+                <input name="amount" type="number" min={0} required defaultValue={0} className={inputCls} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Date</Label>
+                  <input name="incurred_on" type="date" required defaultValue={today} className={inputCls} />
+                </div>
+                <div>
+                  <Label>Invoice / OR ref.</Label>
+                  <input name="invoice_reference" maxLength={100} placeholder="e.g. OR-004512" className={inputCls} />
+                </div>
               </div>
               <div>
-                <Label>Notes (optional)</Label>
-                <textarea name="notes" rows={2} className={inputCls} />
+                <Label>Description</Label>
+                <textarea name="notes" rows={2} placeholder="What the expense was for" className={inputCls} />
               </div>
+              {strict.length > 0 && (
+                <p className="-mt-1 text-[11px] text-gray-500">
+                  For <span className="font-semibold">{strict.join(", ")}</span> expenses, a description and the
+                  invoice / OR reference are required.
+                </p>
+              )}
               <button className="w-full rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark">
                 Add Expense
               </button>

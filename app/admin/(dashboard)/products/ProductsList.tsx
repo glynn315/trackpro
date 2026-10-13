@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { peso } from "@/lib/admin/format";
 import type { AdminProduct } from "@/lib/admin/types";
-import { adjustStock } from "./actions";
+import { adjustStock, deleteProduct } from "./actions";
 
 function StatusPills({ p }: { p: AdminProduct }) {
   return (
@@ -29,10 +29,43 @@ function stockColor(n: number) {
 
 export function ProductsList({ items }: { items: AdminProduct[] }) {
   const [rows, setRows] = useState<AdminProduct[]>(items);
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
 
   async function change(id: number, delta: number) {
     const r = await adjustStock(id, delta);
     if (r) setRows((rs) => rs.map((p) => (p.id === id ? { ...p, stock: r.stock } : p)));
+  }
+
+  async function remove(p: AdminProduct) {
+    if (!window.confirm(`Remove "${p.name}"? Products with past orders are hidden from the store instead of deleted.`)) return;
+    setBusyId(p.id);
+    setNotice(null);
+    const r = await deleteProduct(p.id);
+    setBusyId(null);
+    if (!r.ok) {
+      setNotice({ text: r.message ?? "Could not remove the product.", error: true });
+      return;
+    }
+    setRows((rs) =>
+      r.deleted
+        ? rs.filter((x) => x.id !== p.id)
+        : rs.map((x) => (x.id === p.id ? { ...x, is_active: false, featured: false } : x))
+    );
+    setNotice({ text: r.message ?? "Product removed.", error: false });
+  }
+
+  function RemoveButton({ p }: { p: AdminProduct }) {
+    return (
+      <button
+        type="button"
+        onClick={() => remove(p)}
+        disabled={busyId === p.id}
+        className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+      >
+        Remove
+      </button>
+    );
   }
 
   function Stepper({ p }: { p: AdminProduct }) {
@@ -47,13 +80,23 @@ export function ProductsList({ items }: { items: AdminProduct[] }) {
 
   return (
     <>
+      {notice && (
+        <div
+          className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+            notice.error ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"
+          }`}
+        >
+          {notice.text}
+        </div>
+      )}
+
       {/* Desktop table */}
       <div className="hidden overflow-x-auto rounded-2xl border border-gray-200 bg-white lg:block">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr className="text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">
               <th className="px-5 py-3">Product</th>
-              <th className="px-5 py-3">Model</th>
+              <th className="px-5 py-3">Type</th>
               <th className="px-5 py-3">Price</th>
               <th className="px-5 py-3">Sub/mo</th>
               <th className="px-5 py-3">Stock</th>
@@ -77,7 +120,10 @@ export function ProductsList({ items }: { items: AdminProduct[] }) {
                 <td className="px-5 py-3"><Stepper p={p} /></td>
                 <td className="px-5 py-3"><StatusPills p={p} /></td>
                 <td className="px-5 py-3 text-right">
-                  <Link href={`/admin/products/${p.id}/edit`} className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">Edit</Link>
+                  <div className="flex justify-end gap-2">
+                    <Link href={`/admin/products/${p.id}/edit`} className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">Edit</Link>
+                    <RemoveButton p={p} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -97,7 +143,10 @@ export function ProductsList({ items }: { items: AdminProduct[] }) {
                 </p>
                 <p className="text-xs text-gray-500">{p.category} · <span className="font-mono">{p.model}</span></p>
               </div>
-              <Link href={`/admin/products/${p.id}/edit`} className="shrink-0 rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">Edit</Link>
+              <div className="flex shrink-0 gap-2">
+                <Link href={`/admin/products/${p.id}/edit`} className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">Edit</Link>
+                <RemoveButton p={p} />
+              </div>
             </div>
             <div className="mt-3 flex items-center justify-between">
               <div>

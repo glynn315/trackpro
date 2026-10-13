@@ -34,6 +34,7 @@ These are secrets/config that are **not** in the repo and only you can supply on
 | `trackpro-api/.env` | `MAIL_PASSWORD` | real Gmail **App Password** (16 chars) — email verification fails without it |
 | `trackpro-api/.env` | `PAYMONGO_SECRET_KEY` / `PAYMONGO_PUBLIC_KEY` / `PAYMONGO_WEBHOOK_SECRET` | live keys from the PayMongo dashboard |
 | `trackpro-api/.env` | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | admin login — use a **strong** password before seeding |
+| `trackpro-api/.env` | `MEDIA_DISK` + `R2_*` | `MEDIA_DISK=r2` with the Cloudflare R2 bucket's API token, endpoint and public URL — product / add-on photos and videos are stored there. Then run `php artisan media:sync` once to copy uploads made before the switch (leave `MEDIA_DISK=public` to keep them on the server) |
 | `trackpro-api/.env` | `SUBSCRIPTION_FIRST_YEAR_INCLUDED` | `true` (default) bundles year one with the hardware purchase; `false` invoices it immediately |
 | `trackpro/.env.local` | `NEXT_PUBLIC_API_URL` | `https://your-api-domain` (browser → Laravel) |
 | `trackpro/.env.local` | `API_URL` | `https://your-api-domain` (server → Laravel, admin pages) |

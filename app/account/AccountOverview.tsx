@@ -177,7 +177,7 @@ export function AccountOverview({ justReset = false }: { justReset?: boolean }) 
           ) : (
             <EmptyState
               title="No subscription yet"
-              message="Subscriptions start automatically when you buy a TrackPro device — or pick a yearly plan yourself."
+              message="Subscriptions start automatically when you buy a TrackPro device — or pick a plan yourself."
               action={
                 <Link
                   href="/account/subscription"
@@ -241,7 +241,7 @@ export function AccountOverview({ justReset = false }: { justReset?: boolean }) 
             message="Devices you buy from the shop will show up here."
             action={
               <Link
-                href="/#products"
+                href="/products"
                 className="inline-flex h-10 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark"
               >
                 Browse devices

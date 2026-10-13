@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "TrackPro GPS — Anti-Jammer GPS Tracker, Philippines";
+export const alt = "TrackPro GPS — GPS Tracking & Fleet Management, Philippines";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -51,7 +51,7 @@ export default async function OgImage() {
           }}
         >
           <div style={{ width: 8, height: 8, background: "#ED1C24", borderRadius: 999 }} />
-          Anti-Jammer GPS · Philippines
+          GPS Tracking &amp; Management Solutions
         </div>
 
         {/* Headline */}
@@ -67,8 +67,8 @@ export default async function OgImage() {
             maxWidth: 920,
           }}
         >
-          <span>Stop your vehicle</span>
-          <span style={{ color: "#FF3B44" }}>anytime, anywhere.</span>
+          <span>Smarter Tracking.</span>
+          <span style={{ color: "#FF3B44" }}>Better Decisions.</span>
         </div>
 
         {/* Feature chips */}

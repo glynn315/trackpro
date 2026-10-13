@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { peso } from "@/lib/admin/format";
@@ -103,7 +104,13 @@ export function InvoicesList({ items }: { items: AdminSubscriptionInvoice[] }) {
                 className={busyId === invoice.id && pending ? "opacity-50" : "hover:bg-gray-50"}
               >
                 <td className="px-5 py-3">
-                  <p className="font-mono text-xs font-semibold text-gray-900">{invoice.reference}</p>
+                  <Link
+                    href={`/admin/subscriptions/billing/${invoice.id}`}
+                    title="View / print invoice"
+                    className="font-mono text-xs font-semibold text-gray-900 hover:text-brand hover:underline"
+                  >
+                    {invoice.reference}
+                  </Link>
                   <p className="max-w-xs truncate text-xs text-gray-500">{invoice.description}</p>
                 </td>
                 <td className="px-5 py-3">
@@ -173,7 +180,12 @@ export function InvoicesList({ items }: { items: AdminSubscriptionInvoice[] }) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-mono text-xs font-semibold text-gray-900">{invoice.reference}</p>
+                <Link
+                  href={`/admin/subscriptions/billing/${invoice.id}`}
+                  className="font-mono text-xs font-semibold text-gray-900 hover:text-brand hover:underline"
+                >
+                  {invoice.reference}
+                </Link>
                 <p className="truncate text-sm text-gray-900">{invoice.customer?.name ?? "—"}</p>
               </div>
               <p className="shrink-0 font-bold">{peso(invoice.amount)}</p>

@@ -32,9 +32,11 @@ export default async function SubscriptionPlansPage({
         )}
 
         <p className="mt-6 max-w-2xl text-sm text-gray-600">
-          Yearly plans customers can choose from their account, and the price used when a
-          subscription is provisioned from an order that carries no tracking fee. The{" "}
-          <strong>default</strong> plan is the one used for that fallback.
+          The one list of plans: shown in the homepage <strong>Subscription Plan</strong> section and
+          comparison table, offered to customers in their account, and used for billing. Price changes
+          reach existing subscribers from their next invoice. The <strong>default</strong> plan is also
+          the price used when a
+          subscription is provisioned from an order that carries no tracking fee.
         </p>
 
         <div className="mt-6">

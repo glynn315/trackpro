@@ -1,6 +1,7 @@
 import { products as staticProducts } from "@/lib/site";
 import { iconNames, type IconName } from "@/components/ui/Icon";
 import { API_BASE } from "@/lib/api-base";
+import type { StoreMedia } from "@/components/ui/MediaGallery";
 
 /**
  * A catalog product as the storefront renders it.
@@ -21,6 +22,8 @@ export type CatalogProduct = {
   tagline: string;
   description?: string;
   highlights: readonly string[];
+  /** Photos / video clips uploaded in the admin (first = cover). */
+  media: readonly StoreMedia[];
   featured?: boolean;
   stock: number | null;
   inStock: boolean;
@@ -39,6 +42,7 @@ type ApiProduct = {
   tagline: string | null;
   description: string | null;
   highlights: string[] | null;
+  media?: StoreMedia[] | null;
   featured: boolean;
   stock: number;
   is_active: boolean;
@@ -88,6 +92,7 @@ function fromApi(live: ApiProduct, base?: StaticProduct): CatalogProduct {
     tagline: live.tagline || base?.tagline || "",
     description: live.description || base?.description,
     highlights,
+    media: live.media ?? [],
     featured: Boolean(live.featured),
     stock: live.stock,
     inStock: live.stock > 0,
@@ -99,6 +104,7 @@ function fromStatic(p: StaticProduct): CatalogProduct {
   return {
     ...p,
     icon: normalizeIcon(p.icon),
+    media: [],
     featured: "featured" in p ? Boolean(p.featured) : false,
     stock: null,
     inStock: true,

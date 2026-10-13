@@ -1,8 +1,9 @@
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
-import { Icon } from "@/components/ui/Icon";
-import { heroStats, siteConfig } from "@/lib/site";
+import { Icon, type IconName } from "@/components/ui/Icon";
+import { heroFeatures, siteConfig } from "@/lib/site";
+import { solutions } from "@/lib/solutions";
 
 export function Hero() {
   return (
@@ -65,24 +66,19 @@ export function Hero() {
         <div className="animate-fade-up">
           <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/85 sm:text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-            Anti-Jammer GPS · Philippines
+            GPS Tracking &amp; Management Solutions
           </p>
           <h1 className="text-balance text-[2.25rem] font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.75rem]">
-            Stop your vehicle{" "}
+            Smarter Tracking. Better Decisions.{" "}
             <span className="bg-linear-to-br from-brand-light via-brand to-brand-dark bg-clip-text text-transparent">
-              anytime, anywhere.
+              Optimize Operations.
             </span>
           </h1>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/75 sm:mt-6 sm:text-lg">
             {siteConfig.longDescription}
           </p>
-          <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/85">
-            {[
-              "Anti-Jammer Protection",
-              "Remote Engine Kill",
-              "Door Lock & Unlock",
-              "Real-Time Tracking",
-            ].map((f) => (
+          <ul className="mt-6 grid grid-cols-2 gap-x-5 gap-y-2 text-sm text-white/85 sm:grid-cols-3">
+            {heroFeatures.map((f) => (
               <li key={f} className="inline-flex items-center gap-2">
                 <Icon name="check" className="h-4 w-4 text-brand" />
                 {f}
@@ -90,11 +86,11 @@ export function Hero() {
             ))}
           </ul>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-3">
-            <ButtonLink href="#contact" variant="primary" size="lg" className="w-full sm:w-auto">
-              Request a Demo <Icon name="arrow" className="h-4 w-4" />
+            <ButtonLink href="/contact?type=demo" variant="primary" size="lg" className="w-full sm:w-auto">
+              Request Demo <Icon name="arrow" className="h-4 w-4" />
             </ButtonLink>
-            <ButtonLink href="#products" variant="ghost" size="lg" className="w-full sm:w-auto">
-              View Products
+            <ButtonLink href="/contact" variant="ghost" size="lg" className="w-full sm:w-auto">
+              Get a Quote
             </ButtonLink>
           </div>
         </div>
@@ -148,18 +144,21 @@ export function Hero() {
       </Container>
 
       <Container className="mt-14 sm:mt-16 lg:mt-24">
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-8 border-t border-white/10 pt-10 sm:grid-cols-4 sm:gap-6">
-          {heroStats.map((s, i) => (
-            <div key={s.label} className={`animate-fade-up delay-${100 + i * 100}`}>
-              <dd className="text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-4xl">
-                {s.value}
-              </dd>
-              <dt className="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/55 sm:text-xs">
-                {s.label}
-              </dt>
-            </div>
+        <ul className="grid grid-cols-2 gap-3 border-t border-white/10 pt-8 sm:grid-cols-3 lg:grid-cols-6">
+          {solutions.map((s, i) => (
+            <li key={s.slug} className={`animate-fade-up delay-${100 + Math.min(i, 5) * 100}`}>
+              <a
+                href={`/solutions/${s.slug}`}
+                className="group flex h-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-sm font-semibold transition-colors hover:border-brand/60 hover:bg-brand/10"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand">
+                  <Icon name={s.icon as IconName} className="h-4 w-4" />
+                </span>
+                <span className="leading-tight">{s.name}</span>
+              </a>
+            </li>
           ))}
-        </dl>
+        </ul>
       </Container>
     </section>
   );

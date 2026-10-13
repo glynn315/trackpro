@@ -79,6 +79,18 @@ export async function generateInvoice(id: number): Promise<{ ok: boolean; messag
   return { ok: true };
 }
 
+export async function deleteSubscription(id: number): Promise<{ ok: boolean; message?: string }> {
+  const res = await adminApi(`/api/admin/subscriptions/${id}`, { method: "DELETE" });
+  guard(res.status);
+  if (!res.ok) {
+    const message = await res.json().then((b) => b?.message).catch(() => undefined);
+    return { ok: false, message: message ?? `Could not delete the subscription (${res.status}).` };
+  }
+  revalidatePath("/admin/subscriptions");
+  revalidatePath("/admin/subscriptions/billing");
+  return { ok: true };
+}
+
 /* --------------------------------------------------------------- billing */
 
 export async function markInvoicePaid(
@@ -114,17 +126,23 @@ export async function voidInvoice(id: number): Promise<{ ok: boolean; message?: 
 
 export async function savePlan(formData: FormData) {
   const id = toInt(formData.get("id"));
-  const features = str(formData.get("features"))
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const lines = (field: string) =>
+    str(formData.get(field))
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
 
   const json = {
     name: str(formData.get("name")),
     description: str(formData.get("description")) || null,
+    fleet_size: str(formData.get("fleet_size")) || null,
     price: toInt(formData.get("price")),
-    billing_period: str(formData.get("billing_period")) || "yearly",
-    features,
+    billing_period: str(formData.get("billing_period")) || "monthly",
+    features: lines("features"),
+    recommended_for: lines("recommended_for"),
+    is_popular: formData.get("is_popular") === "on",
+    // Blank = keep the current position (or go last when creating).
+    sort_order: str(formData.get("sort_order")) === "" ? null : toInt(formData.get("sort_order")),
     is_default: formData.get("is_default") === "on",
     is_active: formData.get("is_active") === "on",
   };
@@ -142,8 +160,35 @@ export async function savePlan(formData: FormData) {
     redirect(`/admin/subscriptions/plans?error=${encodeURIComponent(message)}`);
   }
 
+  // The API reports how many live subscribers picked up the new terms.
+  const body = await res.json().catch(() => ({}));
+  const saved = body?.message ?? (id ? "Plan updated" : "Plan created");
+
   revalidatePath("/admin/subscriptions/plans");
-  redirect(`/admin/subscriptions/plans?saved=${id ? "Plan+updated" : "Plan+created"}`);
+  revalidatePath("/admin/subscriptions");
+  revalidatePath("/plans");
+  revalidatePath("/products"); // product cards show plan prices
+  redirect(`/admin/subscriptions/plans?saved=${encodeURIComponent(saved)}`);
+}
+
+/**
+ * Save the whole homepage comparison grid: `features` is the row order and
+ * each plan's `values` line up with it (true = ✓, false = —, text as-is).
+ */
+export async function saveComparison(payload: {
+  features: string[];
+  plans: { id: number; values: (boolean | string)[] }[];
+}): Promise<{ ok: boolean; message?: string }> {
+  const res = await adminApi("/api/admin/subscription-plans/comparison", { method: "PUT", json: payload });
+  guard(res.status);
+  const message = await res.json().then((b) => b?.message).catch(() => undefined);
+  if (!res.ok) return { ok: false, message: message ?? `Could not save the comparison table (${res.status}).` };
+
+  revalidatePath("/admin/subscriptions/comparison");
+  revalidatePath("/admin/subscriptions/plans");
+  revalidatePath("/");
+  revalidatePath("/plans");
+  return { ok: true, message };
 }
 
 export async function deletePlan(id: number): Promise<{ ok: boolean; message?: string }> {
@@ -154,6 +199,8 @@ export async function deletePlan(id: number): Promise<{ ok: boolean; message?: s
     return { ok: false, message: body?.message ?? `Could not delete the plan (${res.status}).` };
   }
   revalidatePath("/admin/subscriptions/plans");
+  revalidatePath("/plans");
+  revalidatePath("/products");
   // The API deactivates plans that are still in use rather than deleting them.
   return { ok: true, message: body?.message };
 }

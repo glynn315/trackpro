@@ -43,6 +43,8 @@ export function ExpensesList({ items }: { items: Expense[] }) {
               <th className="px-5 py-3">Date</th>
               <th className="px-5 py-3">Title</th>
               <th className="px-5 py-3">Category</th>
+              <th className="px-5 py-3">Paid from</th>
+              <th className="px-5 py-3">Invoice Ref.</th>
               <th className="px-5 py-3 text-right">Amount</th>
               <th className="px-5 py-3"></th>
             </tr>
@@ -56,6 +58,8 @@ export function ExpensesList({ items }: { items: Expense[] }) {
                   {e.notes && <p className="text-xs text-gray-500">{e.notes}</p>}
                 </td>
                 <td className="px-5 py-3"><span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold">{e.category}</span></td>
+                <td className="px-5 py-3 text-xs text-gray-600">{e.wallet_name ?? "—"}</td>
+                <td className="px-5 py-3 font-mono text-xs text-gray-600">{e.invoice_reference ?? "—"}</td>
                 <td className="px-5 py-3 text-right font-bold text-red-600">−{peso(e.amount)}</td>
                 <td className="px-5 py-3 text-right">
                   <button onClick={() => remove(e.id)} className="text-xs font-semibold text-gray-400 hover:text-red-600">Delete</button>
@@ -74,6 +78,8 @@ export function ExpensesList({ items }: { items: Expense[] }) {
               <p className="font-medium leading-snug">{e.title}</p>
               <p className="text-xs text-gray-500">
                 <span className="rounded-full bg-gray-100 px-1.5 py-0.5 font-semibold">{e.category}</span> · {fmtDate(e.incurred_on)}
+                {e.wallet_name && <> · {e.wallet_name}</>}
+                {e.invoice_reference && <> · <span className="font-mono">{e.invoice_reference}</span></>}
               </p>
               {e.notes && <p className="mt-0.5 truncate text-xs text-gray-400">{e.notes}</p>}
             </div>

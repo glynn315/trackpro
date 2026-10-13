@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { AuthField, FormError, Spinner } from "@/components/auth/AuthShell";
+import { CompanyField, FleetFields, TermsAgreement, readSignup } from "@/components/auth/SignupFields";
 
 export function RegisterForm() {
   const { signUp, user, hydrated } = useAuth();
@@ -25,12 +26,7 @@ export function RegisterForm() {
     const data = new FormData(e.currentTarget);
 
     try {
-      await signUp({
-        name: String(data.get("name") ?? "").trim(),
-        email: String(data.get("email") ?? "").trim(),
-        phone: String(data.get("phone") ?? "").trim(),
-        password: String(data.get("password") ?? ""),
-      });
+      await signUp(readSignup(data));
       router.replace("/account");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create your account.");
@@ -42,6 +38,7 @@ export function RegisterForm() {
     <form onSubmit={handleSubmit}>
       <div className="space-y-4">
         <AuthField label="Full name" name="name" required autoComplete="name" />
+        <CompanyField />
         <AuthField
           label="Contact number"
           name="phone"
@@ -57,6 +54,7 @@ export function RegisterForm() {
           autoComplete="email"
           placeholder="you@email.com"
         />
+        <FleetFields />
         <AuthField
           label="Password"
           name="password"
@@ -66,6 +64,7 @@ export function RegisterForm() {
           minLength={6}
           hint="At least 6 characters"
         />
+        <TermsAgreement />
       </div>
 
       {error && <FormError message={error} />}

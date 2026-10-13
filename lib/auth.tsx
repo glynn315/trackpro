@@ -33,11 +33,23 @@ type ApiCustomer = {
   email_verified: boolean;
 };
 
+export type SignUpInput = {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  fleetSize?: string;
+  vehicleInfo?: string;
+  password: string;
+  /** "I agree to the Privacy Policy, Terms of Service and Service Agreement" */
+  acceptTerms: boolean;
+};
+
 type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   hydrated: boolean;
-  signUp: (input: { name: string; email: string; phone?: string; password: string }) => Promise<void>;
+  signUp: (input: SignUpInput) => Promise<void>;
   signIn: (input: { email: string; password: string }) => Promise<void>;
   signOut: () => void;
   resendVerification: () => Promise<void>;
@@ -126,11 +138,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshWith]);
 
   const signUp: AuthContextValue["signUp"] = useCallback(
-    async ({ name, email, phone, password }) => {
+    async ({ name, email, phone, company, fleetSize, vehicleInfo, password, acceptTerms }) => {
       const res = await fetch(`${API_BASE}/api/customer/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ name, email, phone: phone || null, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phone || null,
+          company: company || null,
+          fleet_size: fleetSize || null,
+          vehicle_info: vehicleInfo || null,
+          password,
+          accept_terms: acceptTerms,
+        }),
       });
       if (!res.ok) throw new Error(await parseError(res, "Could not create your account."));
       const { customer, token: tok } = await res.json();

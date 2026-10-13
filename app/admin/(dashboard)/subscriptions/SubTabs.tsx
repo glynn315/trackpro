@@ -7,6 +7,7 @@ const TABS = [
   { href: "/admin/subscriptions", label: "Subscribers", exact: true },
   { href: "/admin/subscriptions/billing", label: "Renewal Billing" },
   { href: "/admin/subscriptions/plans", label: "Plans" },
+  { href: "/admin/subscriptions/comparison", label: "Plan Comparison" },
 ];
 
 export function SubTabs() {

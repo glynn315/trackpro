@@ -33,6 +33,7 @@ export default async function OrderShowPage({
   return (
     <>
       <PageHeader title={`Order ${order.reference}`}>
+        <Link href={`/admin/reports/invoice/${order.id}`} className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-dark">Invoice / Print</Link>
         <Link href="/admin/orders" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">← Back</Link>
       </PageHeader>
 
@@ -47,7 +48,7 @@ export default async function OrderShowPage({
                     <div>
                       <p className="font-semibold">{it.qty} × {it.product_name}</p>
                       <p className="text-xs text-gray-500">
-                        Model {it.product_model} · {peso(it.unit_price)} each
+                        {it.product_model} · {peso(it.unit_price)} each
                         {it.unit_subscription > 0 && ` · ${peso(it.unit_subscription)}/mo`}
                       </p>
                     </div>

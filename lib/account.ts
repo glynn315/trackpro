@@ -7,6 +7,7 @@
  */
 
 import { API_BASE } from "@/lib/api-base";
+import type { RenewalInvoice } from "@/components/invoice/RenewalInvoiceSheet";
 
 /* ------------------------------------------------------------------ types */
 
@@ -14,6 +15,7 @@ export type InvoiceStatus = "unpaid" | "awaiting" | "paid" | "void";
 
 export type Invoice = {
   reference: string;
+  issued_at: string | null;
   subscription_reference: string | null;
   description: string;
   amount: number;
@@ -89,6 +91,7 @@ export type Plan = {
   billing_period: "yearly" | "monthly";
   features: string[] | null;
   is_default: boolean;
+  is_popular: boolean;
 };
 
 /* --------------------------------------------------------------- requests */
@@ -138,6 +141,12 @@ export const getInvoices = (token: string) =>
   request<{ data: Invoice[]; totals: { outstanding: number; paid_all_time: number } }>(
     "/api/customer/invoices",
     token
+  );
+
+/** One of the customer's own invoices, with the details its printable copy needs. */
+export const getInvoice = (token: string, reference: string) =>
+  request<{ data: RenewalInvoice }>(`/api/customer/invoices/${encodeURIComponent(reference)}`, token).then(
+    (r) => r.data
   );
 
 export const getOrders = (token: string) =>

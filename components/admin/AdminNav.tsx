@@ -5,12 +5,15 @@ import { usePathname } from "next/navigation";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: "📊", exact: true },
+  { href: "/admin/clients", label: "Clients", icon: "👥" },
   { href: "/admin/orders", label: "Orders", icon: "📦" },
   { href: "/admin/products", label: "Products / Stock", icon: "📡" },
+  { href: "/admin/add-ons", label: "Add-ons", icon: "🧩" },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: "🔁" },
   { href: "/admin/payments", label: "Payments", icon: "💳" },
   { href: "/admin/reports", label: "Sales Reports", icon: "📈" },
   { href: "/admin/expenses", label: "Expenses", icon: "💸" },
+  { href: "/admin/wallets", label: "Wallets", icon: "👛" },
 ];
 
 export function AdminNav() {

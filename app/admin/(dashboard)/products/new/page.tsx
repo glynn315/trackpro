@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { MediaField } from "@/components/admin/MediaField";
 import { createProduct } from "../actions";
 
 export default function NewProductPage() {
@@ -28,7 +29,7 @@ export default function NewProductPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field className="sm:col-span-2" name="name" label="Name" placeholder="TrackPro 4G Multi-functional GPS" required />
-            <Field name="model" label="Model" placeholder="S5L" required />
+            <Field name="model" label="Device type" placeholder="Anti-Jammer GPS Tracker" required />
             <Field name="category" label="Category" placeholder="Vehicle / Asset / Dashcam / OBD" required />
             <Field className="sm:col-span-2" name="slug" label="Slug (optional — auto-generated)" placeholder="trackpro-4g-multi-functional" mono />
             <Field name="price" label="Price (₱)" type="number" defaultValue="0" required />
@@ -49,6 +50,11 @@ export default function NewProductPage() {
                 placeholder={"Real-Time GPS Tracking\nRemote Engine Cut-Off\nAnti-Theft Alarm System"}
                 className={inputCls}
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <Label>Photos &amp; video clips</Label>
+              <MediaField />
             </div>
 
             <div>

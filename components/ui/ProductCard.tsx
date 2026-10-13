@@ -4,12 +4,22 @@ import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { formatPrice } from "@/lib/site";
+import { MediaGallery } from "@/components/ui/MediaGallery";
+import { formatPrice, productDetails } from "@/lib/site";
+import type { StorePlan } from "@/lib/plans";
 import type { CatalogProduct } from "@/lib/products";
 
-export function ProductCard({ product }: { product: CatalogProduct }) {
+export function ProductCard({ product, plans }: { product: CatalogProduct; plans: readonly StorePlan[] }) {
   const { addItem, openDrawer } = useCart();
   const [added, setAdded] = useState(false);
+  const detail = productDetails[product.id];
+  // Recommended plans come from the live plan list, so prices follow the admin.
+  const recommended = detail
+    ? plans.filter((p) => (detail.recommendedPlans as readonly string[]).includes(p.slug))
+    : [];
+  const prices = recommended.map((p) => p.price);
+  const range = prices.length ? { min: Math.min(...prices), max: Math.max(...prices) } : null;
+  const rangeSuffix = recommended[0]?.billing_period === "yearly" ? "/yr." : "/mo.";
   const isFeatured = "featured" in product && product.featured === true;
   const outOfStock = !product.inStock;
   // Nudge urgency when only a handful remain (live stock only).
@@ -75,30 +85,60 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </div>
       </div>
 
-      {/* Name + model + tagline */}
-      <h3 className="text-base font-bold leading-snug text-ink sm:text-lg">{product.name}</h3>
-      <p className="mt-0.5 text-xs font-medium text-muted">Model {product.model}</p>
+      <MediaGallery media={product.media} alt={product.name} />
+
+      {/* Name + descriptor + tagline */}
+      <h3 className="text-base font-bold uppercase leading-snug tracking-tight text-ink sm:text-lg">{product.name}</h3>
+      <p className="mt-0.5 text-xs font-medium italic text-muted">{product.model}</p>
       <p className="mt-2 text-[13px] leading-relaxed text-muted">{product.tagline}</p>
 
-      {/* Features */}
-      <ul className="mt-4 flex-1 space-y-1.5">
-        {product.highlights.slice(0, 4).map((h) => (
-          <li key={h} className="flex items-start gap-2 text-[13px] text-ink">
-            <Icon name="check" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" />
-            <span>{h}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-4 flex-1 space-y-4">
+        <CardList title="Key Features" items={product.highlights} />
+        {detail && <CardList title="Package Inclusion" items={detail.inclusions} />}
+        {recommended.length > 0 && (
+          <div>
+            <CardHeading>Recommended Plan</CardHeading>
+            <p className="text-[13px] text-ink">
+              {recommended
+                .map((p) => `${p.name} ${formatPrice(p.price)}`)
+                .join(" · ")}
+            </p>
+            <a href="/plans" className="mt-0.5 inline-block text-[11px] font-semibold text-brand hover:underline">
+              Compare all plans
+            </a>
+          </div>
+        )}
+        {detail && detail.addOns.length > 0 && (
+          <div>
+            <CardHeading>Optional Add-ons</CardHeading>
+            <ul className="flex flex-wrap gap-1.5">
+              {detail.addOns.map((a) => (
+                <li key={a} className="rounded-md bg-soft px-2 py-0.5 text-[11px] font-medium text-ink">{a}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {detail && (
+          <div>
+            <CardHeading>Best For</CardHeading>
+            <p className="text-[12px] leading-relaxed text-muted">{detail.bestFor.join(" • ")}</p>
+          </div>
+        )}
+      </div>
 
       {/* Price */}
       <div className="mt-5 flex items-baseline gap-2 border-t border-line pt-4">
         <span className="text-2xl font-extrabold tracking-tight text-ink">
           {formatPrice(product.price)}
         </span>
-        {product.subscription > 0 && (
+        {range ? (
           <span className="text-xs text-muted">
-            + {formatPrice(product.subscription)}/mo
+            + {range.min === range.max ? formatPrice(range.min) : `${formatPrice(range.min)}–${formatPrice(range.max)}`}{rangeSuffix}
           </span>
+        ) : (
+          product.subscription > 0 && (
+            <span className="text-xs text-muted">+ {formatPrice(product.subscription)}/mo.</span>
+          )
         )}
       </div>
 
@@ -157,5 +197,25 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </div>
       )}
     </article>
+  );
+}
+
+function CardHeading({ children }: { children: React.ReactNode }) {
+  return <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-ink">{children}</p>;
+}
+
+function CardList({ title, items }: { title: string; items: readonly string[] }) {
+  return (
+    <div>
+      <CardHeading>{title}</CardHeading>
+      <ul className="space-y-1">
+        {items.map((h) => (
+          <li key={h} className="flex items-start gap-2 text-[13px] text-ink">
+            <Icon name="check" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" />
+            <span>{h}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

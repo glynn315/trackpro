@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { peso } from "@/lib/admin/format";
 import type { AdminSubscription, AdminSubscriptionStatus } from "@/lib/admin/types";
-import { generateInvoice, updateSubscription } from "./actions";
+import { deleteSubscription, generateInvoice, updateSubscription } from "./actions";
 
 const statusBadge: Record<AdminSubscriptionStatus, string> = {
   active: "bg-emerald-100 text-emerald-700",
@@ -58,6 +58,12 @@ export function SubscriptionsList({ items }: { items: AdminSubscription[] }) {
     run(sub.id, () => updateSubscription(sub.id, { status }));
 
   const invoice = (sub: AdminSubscription) => run(sub.id, () => generateInvoice(sub.id));
+
+  const remove = (sub: AdminSubscription) => {
+    const who = sub.customer?.name ? ` for ${sub.customer.name}` : "";
+    if (!window.confirm(`Delete subscription ${sub.reference}${who}? Its unpaid invoices are deleted too. This cannot be undone.`)) return;
+    run(sub.id, () => deleteSubscription(sub.id));
+  };
 
   if (items.length === 0) {
     return (
@@ -136,14 +142,24 @@ export function SubscriptionsList({ items }: { items: AdminSubscription[] }) {
                     )}
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => invoice(sub)}
-                      disabled={pending}
-                      className="text-xs font-semibold text-brand hover:underline disabled:opacity-50"
-                    >
-                      Raise invoice
-                    </button>
+                    <div className="flex flex-col items-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => invoice(sub)}
+                        disabled={pending}
+                        className="text-xs font-semibold text-brand hover:underline disabled:opacity-50"
+                      >
+                        Raise invoice
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(sub)}
+                        disabled={pending}
+                        className="text-xs font-semibold text-gray-400 hover:text-red-600 disabled:opacity-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -203,6 +219,14 @@ export function SubscriptionsList({ items }: { items: AdminSubscription[] }) {
                     </option>
                   ))}
                 </select>
+                <button
+                  type="button"
+                  onClick={() => remove(sub)}
+                  disabled={pending}
+                  className="ml-auto text-xs font-semibold text-gray-400 hover:text-red-600 disabled:opacity-50"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           );

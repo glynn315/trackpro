@@ -143,7 +143,7 @@ export function CartDrawer() {
                           <p className="truncate text-sm font-semibold text-ink">
                             {line.product.name}
                           </p>
-                          <p className="text-xs text-muted">Model {line.product.model}</p>
+                          <p className="text-xs text-muted">{line.product.model}</p>
                         </div>
                         <button
                           type="button"

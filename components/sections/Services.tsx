@@ -1,6 +1,6 @@
 import { Section } from "@/components/ui/Section";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { services } from "@/lib/site";
+import { services, servicesIntro } from "@/lib/site";
 
 export function Services() {
   return (
@@ -8,14 +8,14 @@ export function Services() {
       id="services"
       eyebrow="Services"
       title="Total control over your vehicle"
-      description="From a single car to a full fleet — TrackPro keeps every vehicle visible, protected, and under your control."
+      description={servicesIntro.join(" ")}
       surface="soft"
     >
-      <div className="grid gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {services.map((s) => (
           <article
             key={s.title}
-            className="group relative overflow-hidden rounded-2xl border border-line bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-[0_18px_44px_-14px_rgba(237,28,36,0.22)] sm:p-7"
+            className="group relative overflow-hidden rounded-2xl border border-line bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-[0_18px_44px_-14px_rgba(237,28,36,0.22)] sm:p-6"
           >
             {/* Top accent line that draws in on hover */}
             <span

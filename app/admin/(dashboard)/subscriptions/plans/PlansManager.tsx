@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { peso } from "@/lib/admin/format";
@@ -42,7 +43,7 @@ export function PlansManager({ plans }: { plans: AdminSubscriptionPlan[] }) {
         {plans.length === 0 && (
           <div className="rounded-2xl border border-gray-200 bg-white px-5 py-12 text-center">
             <p className="font-semibold text-gray-900">No plans yet</p>
-            <p className="mt-1 text-sm text-gray-500">Create your first yearly plan on the right.</p>
+            <p className="mt-1 text-sm text-gray-500">Create your first plan on the right.</p>
           </div>
         )}
 
@@ -57,6 +58,11 @@ export function PlansManager({ plans }: { plans: AdminSubscriptionPlan[] }) {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-bold text-gray-900">{plan.name}</h3>
+                  {plan.is_popular && (
+                    <span className="rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                      Popular
+                    </span>
+                  )}
                   {plan.is_default && (
                     <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand">
                       Default
@@ -68,7 +74,10 @@ export function PlansManager({ plans }: { plans: AdminSubscriptionPlan[] }) {
                     </span>
                   )}
                 </div>
-                <p className="mt-1 font-mono text-[11px] text-gray-400">{plan.slug}</p>
+                <p className="mt-1 font-mono text-[11px] text-gray-400">
+                  #{plan.sort_order} · {plan.slug}
+                  {plan.fleet_size ? ` · ${plan.fleet_size}` : ""}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-xl font-extrabold text-gray-900">{peso(plan.price)}</p>
@@ -134,7 +143,7 @@ function PlanForm({
   return (
     <section className="h-fit rounded-2xl border border-gray-200 bg-white p-5 lg:sticky lg:top-20">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-bold">{plan ? `Edit ${plan.name}` : "New yearly plan"}</h2>
+        <h2 className="font-bold">{plan ? `Edit ${plan.name}` : "New plan"}</h2>
         {plan && (
           <button type="button" onClick={onCancel} className="text-xs font-semibold text-gray-500 hover:text-brand">
             Cancel
@@ -152,7 +161,7 @@ function PlanForm({
             name="name"
             required
             defaultValue={plan?.name ?? ""}
-            placeholder="e.g. Basic Tracking (Yearly)"
+            placeholder="e.g. Basic"
             className={inputCls}
           />
         </div>
@@ -166,7 +175,7 @@ function PlanForm({
               type="number"
               min={0}
               required
-              defaultValue={plan?.price ?? 1200}
+              defaultValue={plan?.price ?? 0}
               className={inputCls}
             />
           </div>
@@ -175,12 +184,43 @@ function PlanForm({
             <select
               id="billing_period"
               name="billing_period"
-              defaultValue={plan?.billing_period ?? "yearly"}
+              defaultValue={plan?.billing_period ?? "monthly"}
               className={inputCls}
             >
-              <option value="yearly">Yearly</option>
               <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
             </select>
+          </div>
+        </div>
+        {plan && (plan.active_subscriptions_count ?? 0) > 0 && (
+          <p className="-mt-1 text-xs text-amber-700">
+            Changing the name, price or billing applies to this plan&apos;s current subscribers from their
+            next invoice.
+          </p>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="fleet_size">Fleet size</Label>
+            <input
+              id="fleet_size"
+              name="fleet_size"
+              defaultValue={plan?.fleet_size ?? ""}
+              placeholder="e.g. 1–2 Vehicles"
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <Label htmlFor="sort_order">Display order</Label>
+            <input
+              id="sort_order"
+              name="sort_order"
+              type="number"
+              min={0}
+              defaultValue={plan?.sort_order ?? ""}
+              placeholder="Last"
+              className={inputCls}
+            />
           </div>
         </div>
 
@@ -196,16 +236,36 @@ function PlanForm({
         </div>
 
         <div>
-          <Label htmlFor="features">Features (one per line)</Label>
+          <Label htmlFor="features">Includes (one per line)</Label>
           <textarea
             id="features"
             name="features"
             rows={5}
             defaultValue={(plan?.features ?? []).join("\n")}
-            placeholder={"Real-time location tracking\n30-day travel history"}
+            placeholder={"GPS Tracking Platform\nReal-Time Tracking"}
             className={inputCls}
           />
         </div>
+
+        <div>
+          <Label htmlFor="recommended_for">Recommended for (one per line)</Label>
+          <textarea
+            id="recommended_for"
+            name="recommended_for"
+            rows={3}
+            defaultValue={(plan?.recommended_for ?? []).join("\n")}
+            placeholder={"Private Vehicles\nSmall Fleets"}
+            className={inputCls}
+          />
+        </div>
+
+        <p className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+          Which features this plan gets in the homepage comparison table is set under{" "}
+          <Link href="/admin/subscriptions/comparison" className="font-semibold text-brand hover:underline">
+            Plan Comparison
+          </Link>
+          .
+        </p>
 
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input
@@ -214,7 +274,17 @@ function PlanForm({
             defaultChecked={plan ? plan.is_active : true}
             className="h-4 w-4 rounded border-gray-300"
           />
-          Active (customers can choose it)
+          Active (shown on the website and customers can choose it)
+        </label>
+
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name="is_popular"
+            defaultChecked={plan?.is_popular ?? false}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+          Mark as &ldquo;Popular&rdquo;
         </label>
 
         <label className="flex items-center gap-2 text-sm text-gray-700">

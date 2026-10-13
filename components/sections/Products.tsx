@@ -1,30 +1,28 @@
 import { Section } from "@/components/ui/Section";
-import { ProductCard } from "@/components/ui/ProductCard";
+import { ProductGrid } from "@/components/sections/ProductGrid";
 import { getCatalog } from "@/lib/products";
+import { getPlans } from "@/lib/plans";
+import { hardwareIntro, products } from "@/lib/site";
 
 export async function Products() {
-  const catalog = await getCatalog();
+  const [catalog, plans] = await Promise.all([getCatalog(), getPlans()]);
 
-  // Featured first, then the rest in catalog order
-  const ordered = [...catalog].sort((a, b) => {
-    const af = "featured" in a && a.featured === true ? 0 : 1;
-    const bf = "featured" in b && b.featured === true ? 0 : 1;
-    return af - bf;
-  });
+  // Curated lineup order (Core, Guard, Fleet…); admin-only products go last.
+  const rank = (id: string) => {
+    const i = products.findIndex((p) => p.id === id);
+    return i === -1 ? products.length : i;
+  };
+  const ordered = [...catalog].sort((a, b) => rank(a.id) - rank(b.id));
 
   return (
     <Section
       id="products"
-      eyebrow="Our Products"
-      title="The full TrackPro GPS lineup"
-      description="Anti-theft, fleet, dashcam, OBD, and asset trackers — all built for Philippine roads and conditions."
+      eyebrow="Products"
+      title="Hardware Packages"
+      description={hardwareIntro.join(" ")}
       surface="white"
     >
-      <div className="grid gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-        {ordered.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-      </div>
+      <ProductGrid products={ordered} plans={plans} />
     </Section>
   );
 }
