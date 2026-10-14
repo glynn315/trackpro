@@ -14,7 +14,7 @@
  * Note this is read at BUILD time — it's inlined into the client bundle — so
  * changing the env var on the host requires a redeploy.
  */
-export const DEFAULT_API_BASE = "https://cyan-scorpion-586902.hostingersite.com";
+export const DEFAULT_API_BASE = "https://api.trackprotracking.com";
 
 /** Browser- and server-safe API base. Never empty. */
 export const API_BASE = (

@@ -50,7 +50,7 @@ export function AuthShell({
 
           <p className="mt-6 text-center text-xs text-subtle">
             <Link href="/" className="font-semibold text-muted hover:text-brand">
-              ← Back to trackprogps.com
+              ← Back to trackprotracking.com
             </Link>
           </p>
         </Container>

@@ -115,7 +115,7 @@ export default async function OgImage() {
             <span style={{ color: "#ED1C24" }}>PRO</span>
           </div>
           <div style={{ display: "flex", fontSize: 22, color: "rgba(255,255,255,0.65)" }}>
-            trackprogps.com
+            trackprotracking.com
           </div>
         </div>
       </div>

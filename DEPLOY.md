@@ -29,7 +29,7 @@ These are secrets/config that are **not** in the repo and only you can supply on
 | `trackpro-api/.env` | `APP_KEY` | generate fresh — `php artisan key:generate` (never reuse the dev key) |
 | `trackpro-api/.env` | `APP_URL` | `https://your-api-domain` |
 | `trackpro-api/.env` | `DB_*` | production MySQL host / db / user / password |
-| `trackpro-api/.env` | `FRONTEND_URL` | comma-separated frontend origins, e.g. `https://trackprogps.com,https://www.trackprogps.com` — **drives CORS** |
+| `trackpro-api/.env` | `FRONTEND_URL` | comma-separated frontend origins, e.g. `https://trackprotracking.com,https://www.trackprotracking.com` — **drives CORS** |
 | `trackpro-api/.env` | `FRONTEND_URL_PATTERNS` | *optional* — regexes for build-generated origins (Vercel previews). Leave empty to allow only the exact origins above |
 | `trackpro-api/.env` | `MAIL_PASSWORD` | real Gmail **App Password** (16 chars) — email verification fails without it |
 | `trackpro-api/.env` | `PAYMONGO_SECRET_KEY` / `PAYMONGO_PUBLIC_KEY` / `PAYMONGO_WEBHOOK_SECRET` | live keys from the PayMongo dashboard |
@@ -107,15 +107,15 @@ and statuses won't update on their own.
 
 
 1. In the PayMongo dashboard → **Developers → Webhooks**, add:
-   `https://your-api-domain/api/paymongo/webhook`
+   `https://api.trackprotracking.com/api/paymongo/webhook`
 
    ⚠️ **This must be the Laravel API's domain, not the storefront's.** The
-   frontend domain (`trackpro-gps.store`, on Vercel) has no such route — PayMongo
+   frontend domain (`trackprotracking.com`) has no such route — PayMongo
    would post to a 404 and every payment would sit at "awaiting". Confirm the URL
    answers before saving it:
 
    ```bash
-   curl -i -X POST https://your-api-domain/api/paymongo/webhook \
+   curl -i -X POST https://api.trackprotracking.com/api/paymongo/webhook \
      -H "Content-Type: application/json" -d '{}'
    # Laravel replies 401 (bad signature) or 200 JSON — never an HTML 404 page.
    ```
@@ -200,7 +200,7 @@ reach it, and which env vars are set (never their values). Read it top-down:
 |---|---|---|
 | `"using_fallback": true` | `API_URL` isn't set on the host, so it fell back to the URL baked into `lib/api-base.ts` | Set `API_URL` **and** `NEXT_PUBLIC_API_URL` for Production *and* Preview, then **redeploy** |
 | `"reachable": false` with a connection error | The host can't reach Laravel — usually a `127.0.0.1`/localhost value copied from dev, or a firewalled host | Point them at the public `https://` URL of the API and redeploy |
-| `"status": 200` but `"content_type": "text/html"` | The URL resolves to something that isn't the Laravel app (parked page, wrong subdirectory) | Verify `https://your-api-domain/api/products` returns JSON in a browser |
+| `"status": 200` but `"content_type": "text/html"` | The URL resolves to something that isn't the Laravel app (parked page, wrong subdirectory) | Verify `https://api.trackprotracking.com/api/products` returns JSON in a browser |
 | `"ok": true`, yet the browser still fails | The server can reach the API but the **browser** is blocked — a CORS problem | Add the exact frontend origin to `FRONTEND_URL` in `trackpro-api/.env`, then `php artisan config:clear && php artisan config:cache` |
 
 Two further gotchas that produce a page that looks fine but does nothing:

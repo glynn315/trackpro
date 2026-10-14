@@ -7,7 +7,7 @@ import type { NextConfig } from "next";
  * subscriptions) then error out. List those extra hostnames in
  * `SERVER_ACTIONS_ALLOWED_ORIGINS` (comma-separated, host only, no scheme), e.g.
  *
- *   SERVER_ACTIONS_ALLOWED_ORIGINS="trackprogps.com,www.trackprogps.com"
+ *   SERVER_ACTIONS_ALLOWED_ORIGINS="trackprotracking.com,www.trackprotracking.com"
  *
  * Sign-in itself doesn't need this — it goes through /api/admin/session.
  */
