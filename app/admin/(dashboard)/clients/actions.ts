@@ -52,3 +52,42 @@ export async function createClient(formData: FormData) {
   revalidatePath("/admin/subscriptions");
   redirect(`/admin/clients?saved=${encodeURIComponent(saved)}`);
 }
+
+export async function updateClient(id: number, formData: FormData) {
+  const res = await adminApi(`/api/admin/clients/${id}`, {
+    method: "PUT",
+    json: {
+      name: str(formData.get("name")),
+      email: str(formData.get("email")),
+      phone: str(formData.get("phone")) || null,
+      company: str(formData.get("company")) || null,
+      fleet_size: str(formData.get("fleet_size")) || null,
+      vehicle_info: str(formData.get("vehicle_info")) || null,
+      password: str(formData.get("password")) || null,
+    },
+  });
+  guard(res.status);
+
+  if (!res.ok) {
+    const message = await errorMessage(res, "Could not save the client.");
+    redirect(`/admin/clients/${id}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/clients");
+  revalidatePath(`/admin/clients/${id}`);
+  redirect(`/admin/clients/${id}?saved=${encodeURIComponent("Client details saved.")}`);
+}
+
+export async function deleteClient(id: number): Promise<{ ok: boolean; message?: string }> {
+  const res = await adminApi(`/api/admin/clients/${id}`, { method: "DELETE" });
+  guard(res.status);
+  if (!res.ok) {
+    return { ok: false, message: await errorMessage(res, `Could not delete the client (${res.status}).`) };
+  }
+
+  const body = (await res.json().catch(() => ({}))) as { message?: string };
+  revalidatePath("/admin/clients");
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/subscriptions");
+  redirect(`/admin/clients?saved=${encodeURIComponent(body.message ?? "Client deleted.")}`);
+}

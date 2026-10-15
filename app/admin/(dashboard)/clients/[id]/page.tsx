@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { peso } from "@/lib/admin/format";
 import { adminApi } from "@/lib/admin/api";
 import type { AdminClientDetail } from "@/lib/admin/types";
+import { DeleteClientButton } from "./DeleteClientButton";
+import { EditClientForm } from "./EditClientForm";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +31,15 @@ function fmtDate(d: string | null) {
   return d ? new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "—";
 }
 
-export default async function ClientShowPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ClientShowPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
+}) {
   const { id } = await params;
+  const sp = await searchParams;
   const res = await adminApi(`/api/admin/clients/${id}`);
   if (res.status === 401 || res.status === 403) redirect("/admin/login");
   if (res.status === 404) notFound();
@@ -40,10 +49,23 @@ export default async function ClientShowPage({ params }: { params: Promise<{ id:
   return (
     <>
       <PageHeader title={client.name}>
-        <Link href="/admin/clients" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">← Back</Link>
+        <div className="flex items-start gap-2">
+          <Link href="/admin/clients" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">← Back</Link>
+          <DeleteClientButton id={client.id} name={client.name} />
+        </div>
       </PageHeader>
 
       <div className="p-5 lg:p-8">
+        {sp.saved && (
+          <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {sp.saved}
+          </div>
+        )}
+        {sp.error && (
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {sp.error}
+          </div>
+        )}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Client information */}
           <aside className="space-y-6">
@@ -68,6 +90,8 @@ export default async function ClientShowPage({ params }: { params: Promise<{ id:
                 <Row label="Agreed to terms" value={fmtDate(client.terms_accepted_at)} />
               </dl>
             </Card>
+
+            <EditClientForm client={client} />
 
             <Card title="Totals">
               <dl className="space-y-2 px-5 py-4 text-sm">
