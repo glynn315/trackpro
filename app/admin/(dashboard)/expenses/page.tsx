@@ -80,7 +80,7 @@ export default async function ExpensesPage({
               </div>
               <div>
                 <Label>Amount (₱)</Label>
-                <input name="amount" type="number" min={0} required defaultValue={0} className={inputCls} />
+                <input name="amount" type="number" min={1} required className={inputCls} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -109,7 +109,7 @@ export default async function ExpensesPage({
           </section>
 
           <div>
-            <ExpensesList key={meta.current_page} items={data} />
+            <ExpensesList items={data} options={options} />
             <Pagination meta={meta} />
           </div>
         </div>

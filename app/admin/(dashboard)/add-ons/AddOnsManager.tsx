@@ -104,7 +104,15 @@ export function AddOnsManager({ addOns }: { addOns: AdminAddOn[] }) {
             )}
 
             <div className="mt-4 flex justify-end gap-4 border-t border-gray-100 pt-3 text-xs">
-              <button type="button" onClick={() => setEditing(a)} className="font-semibold text-brand hover:underline">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(a);
+                  // On narrow screens the form sits below the list — bring it into view.
+                  document.getElementById("add-on-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="font-semibold text-brand hover:underline"
+              >
                 Edit
               </button>
               <button
@@ -128,7 +136,7 @@ export function AddOnsManager({ addOns }: { addOns: AdminAddOn[] }) {
 
 function AddOnForm({ addOn, onCancel }: { addOn: AdminAddOn | null; onCancel: () => void }) {
   return (
-    <section className="h-fit rounded-2xl border border-gray-200 bg-white p-5 lg:sticky lg:top-20">
+    <section id="add-on-form" className="h-fit scroll-mt-20 rounded-2xl border border-gray-200 bg-white p-5 lg:sticky lg:top-20">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold">{addOn ? `Edit ${addOn.name}` : "New add-on"}</h2>
         {addOn && (
@@ -144,6 +152,11 @@ function AddOnForm({ addOn, onCancel }: { addOn: AdminAddOn | null; onCancel: ()
         <div>
           <Label htmlFor="name">Name</Label>
           <input id="name" name="name" required defaultValue={addOn?.name ?? ""} placeholder="e.g. Fuel Sensor" className={inputCls} />
+        </div>
+
+        <div>
+          <Label htmlFor="slug">Slug (blank = from the name)</Label>
+          <input id="slug" name="slug" defaultValue={addOn?.slug ?? ""} placeholder="fuel-sensor" className={`${inputCls} font-mono text-xs`} />
         </div>
 
         <div>

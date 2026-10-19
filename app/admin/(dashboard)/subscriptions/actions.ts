@@ -66,6 +66,35 @@ export async function updateSubscription(
   return { ok: true };
 }
 
+/** Save the full edit form for one subscription. */
+export async function editSubscription(id: number, formData: FormData): Promise<{ ok: boolean; message?: string }> {
+  const planId = toInt(formData.get("subscription_plan_id"));
+  const res = await adminApi(`/api/admin/subscriptions/${id}`, {
+    method: "PATCH",
+    json: {
+      customer_id: toInt(formData.get("customer_id")) || null,
+      subscription_plan_id: planId > 0 ? planId : null,
+      plan_name: str(formData.get("plan_name")) || null,
+      billing_period: str(formData.get("billing_period")) || null,
+      quantity: Math.max(1, toInt(formData.get("quantity"), 1)),
+      unit_price: toInt(formData.get("unit_price")),
+      starts_at: str(formData.get("starts_at")) || null,
+      renews_at: str(formData.get("renews_at")) || null,
+      status: str(formData.get("status")) || null,
+      auto_renew: formData.get("auto_renew") === "on",
+      notes: str(formData.get("notes")) || null,
+    },
+  });
+  guard(res.status);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const first = body?.errors ? (Object.values(body.errors).flat()[0] as string | undefined) : undefined;
+    return { ok: false, message: first ?? body?.message ?? `Update failed (${res.status}).` };
+  }
+  revalidatePath("/admin/subscriptions");
+  return { ok: true };
+}
+
 /** Raise the next renewal invoice for a subscription immediately. */
 export async function generateInvoice(id: number): Promise<{ ok: boolean; message?: string }> {
   const res = await adminApi(`/api/admin/subscriptions/${id}/invoice`, { method: "POST" });

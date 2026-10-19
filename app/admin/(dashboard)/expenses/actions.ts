@@ -9,19 +9,20 @@ function toInt(v: FormDataEntryValue | null): number {
   return Number.isFinite(n) ? Math.max(0, n) : 0;
 }
 
+function expenseJson(formData: FormData) {
+  return {
+    title: String(formData.get("title") ?? "").trim(),
+    expense_category_id: toInt(formData.get("expense_category_id")) || null,
+    wallet_id: toInt(formData.get("wallet_id")) || null,
+    amount: toInt(formData.get("amount")),
+    invoice_reference: String(formData.get("invoice_reference") ?? "").trim() || null,
+    incurred_on: String(formData.get("incurred_on") ?? "").trim(),
+    notes: String(formData.get("notes") ?? "").trim() || null,
+  };
+}
+
 export async function createExpense(formData: FormData) {
-  const res = await adminApi("/api/admin/expenses", {
-    method: "POST",
-    json: {
-      title: String(formData.get("title") ?? "").trim(),
-      expense_category_id: toInt(formData.get("expense_category_id")) || null,
-      wallet_id: toInt(formData.get("wallet_id")) || null,
-      amount: toInt(formData.get("amount")),
-      invoice_reference: String(formData.get("invoice_reference") ?? "").trim() || null,
-      incurred_on: String(formData.get("incurred_on") ?? "").trim(),
-      notes: String(formData.get("notes") ?? "").trim() || null,
-    },
-  });
+  const res = await adminApi("/api/admin/expenses", { method: "POST", json: expenseJson(formData) });
   if (res.status === 401 || res.status === 403) redirect("/admin/login");
   if (!res.ok) {
     const message = await res
@@ -32,13 +33,27 @@ export async function createExpense(formData: FormData) {
   }
 
   revalidatePath("/admin/expenses");
+  revalidatePath("/admin/expenses/categories");
+  revalidatePath("/admin/wallets");
   redirect("/admin/expenses?saved=1");
 }
 
 export async function deleteExpense(id: number): Promise<boolean> {
   const res = await adminApi(`/api/admin/expenses/${id}`, { method: "DELETE" });
   if (res.status === 401 || res.status === 403) redirect("/admin/login");
+  if (res.ok) {
+    revalidatePath("/admin/expenses");
+    revalidatePath("/admin/expenses/categories");
+    revalidatePath("/admin/wallets");
+  }
   return res.ok;
+}
+
+export async function updateExpense(id: number, formData: FormData): Promise<Result> {
+  return result(
+    await adminApi(`/api/admin/expenses/${id}`, { method: "PATCH", json: expenseJson(formData) }),
+    "Could not save the expense."
+  );
 }
 
 /* ------------------------------------------------------------ categories */
@@ -54,6 +69,7 @@ async function result(res: Response, fallback: string): Promise<Result> {
   }
   revalidatePath("/admin/expenses");
   revalidatePath("/admin/expenses/categories");
+  revalidatePath("/admin/wallets");
   return { ok: true, message: body?.message };
 }
 

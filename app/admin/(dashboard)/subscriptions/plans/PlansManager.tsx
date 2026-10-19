@@ -108,7 +108,11 @@ export function PlansManager({ plans }: { plans: AdminSubscriptionPlan[] }) {
               <div className="flex gap-4">
                 <button
                   type="button"
-                  onClick={() => setEditing(plan)}
+                  onClick={() => {
+                    setEditing(plan);
+                    // On narrow screens the form sits below the list — bring it into view.
+                    document.getElementById("plan-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
                   className="font-semibold text-brand hover:underline"
                 >
                   Edit
@@ -141,7 +145,7 @@ function PlanForm({
   onCancel: () => void;
 }) {
   return (
-    <section className="h-fit rounded-2xl border border-gray-200 bg-white p-5 lg:sticky lg:top-20">
+    <section id="plan-form" className="h-fit scroll-mt-20 rounded-2xl border border-gray-200 bg-white p-5 lg:sticky lg:top-20">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold">{plan ? `Edit ${plan.name}` : "New plan"}</h2>
         {plan && (

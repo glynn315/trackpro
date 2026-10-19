@@ -116,7 +116,7 @@ export default async function SubscriptionsPage({
         </form>
 
         <div className="mt-5">
-          <SubscriptionsList key={meta.current_page} items={data} />
+          <SubscriptionsList key={meta.current_page} items={data} plans={plans} customers={customers} />
           <Pagination meta={meta} params={{ status: sp.status, due: sp.due, search: sp.search }} />
         </div>
 

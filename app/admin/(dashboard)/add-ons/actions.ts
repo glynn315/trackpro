@@ -37,6 +37,8 @@ export async function saveAddOn(formData: FormData) {
 
   const json = {
     name: str(formData.get("name")),
+    // Blank = generate it from the name.
+    slug: str(formData.get("slug")) || null,
     subtitle: str(formData.get("subtitle")) || null,
     price: toInt(formData.get("price")),
     icon: str(formData.get("icon")) || null,

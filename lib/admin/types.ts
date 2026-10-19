@@ -158,6 +158,7 @@ export type AdminSubscription = {
   id: number;
   reference: string;
   customer: { id: number; name: string; email: string; phone: string | null } | null;
+  subscription_plan_id: number | null;
   plan_name: string;
   billing_period: "yearly" | "monthly";
   quantity: number;

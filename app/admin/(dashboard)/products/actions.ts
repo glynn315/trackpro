@@ -17,28 +17,36 @@ function parseHighlights(v: FormDataEntryValue | null): string[] {
     .filter(Boolean);
 }
 
+/** Every editable product field, shared by the create and edit forms. */
+function productJson(formData: FormData) {
+  return {
+    name: String(formData.get("name") ?? "").trim(),
+    slug: String(formData.get("slug") ?? "").trim() || null,
+    model: String(formData.get("model") ?? "").trim(),
+    category: String(formData.get("category") ?? "").trim(),
+    icon: String(formData.get("icon") ?? "").trim() || null,
+    price: toInt(formData.get("price")),
+    subscription: toInt(formData.get("subscription")),
+    tagline: String(formData.get("tagline") ?? "").trim(),
+    description: String(formData.get("description") ?? "").trim() || null,
+    highlights: parseHighlights(formData.get("highlights")),
+    media: parseMediaInput(formData.get("media")),
+    stock: toInt(formData.get("stock")),
+    featured: formData.get("featured") === "1",
+    is_active: formData.get("is_active") !== "0",
+  };
+}
+
+async function errorMessage(res: Response): Promise<string> {
+  const body = await res.json().catch(() => ({}));
+  const first = body?.errors ? (Object.values(body.errors).flat()[0] as string | undefined) : undefined;
+  return first ?? body?.message ?? "1";
+}
+
 export async function createProduct(formData: FormData) {
-  const res = await adminApi("/api/admin/products", {
-    method: "POST",
-    json: {
-      name: String(formData.get("name") ?? "").trim(),
-      slug: String(formData.get("slug") ?? "").trim() || null,
-      model: String(formData.get("model") ?? "").trim(),
-      category: String(formData.get("category") ?? "").trim(),
-      icon: String(formData.get("icon") ?? "").trim() || null,
-      price: toInt(formData.get("price")),
-      subscription: toInt(formData.get("subscription")),
-      tagline: String(formData.get("tagline") ?? "").trim(),
-      description: String(formData.get("description") ?? "").trim() || null,
-      highlights: parseHighlights(formData.get("highlights")),
-      media: parseMediaInput(formData.get("media")),
-      stock: toInt(formData.get("stock")),
-      featured: formData.get("featured") === "1",
-      is_active: formData.get("is_active") !== "0",
-    },
-  });
+  const res = await adminApi("/api/admin/products", { method: "POST", json: productJson(formData) });
   if (res.status === 401 || res.status === 403) redirect("/admin/login");
-  if (!res.ok) redirect("/admin/products/new?error=1");
+  if (!res.ok) redirect(`/admin/products/new?error=${encodeURIComponent(await errorMessage(res))}`);
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
@@ -46,19 +54,9 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: number, formData: FormData) {
-  const res = await adminApi(`/api/admin/products/${id}`, {
-    method: "PATCH",
-    json: {
-      price: toInt(formData.get("price")),
-      subscription: toInt(formData.get("subscription")),
-      stock: toInt(formData.get("stock")),
-      featured: formData.get("featured") === "1",
-      is_active: formData.get("is_active") !== "0",
-      media: parseMediaInput(formData.get("media")),
-    },
-  });
+  const res = await adminApi(`/api/admin/products/${id}`, { method: "PATCH", json: productJson(formData) });
   if (res.status === 401 || res.status === 403) redirect("/admin/login");
-  if (!res.ok) redirect(`/admin/products/${id}/edit?error=1`);
+  if (!res.ok) redirect(`/admin/products/${id}/edit?error=${encodeURIComponent(await errorMessage(res))}`);
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
@@ -90,5 +88,6 @@ export async function deleteProduct(
     return { ok: false, message: body?.message ?? `Could not delete the product (${res.status}).` };
   }
   revalidatePath("/admin/products");
+  revalidatePath("/products");
   return { ok: true, deleted: !body?.data, message: body?.message };
 }

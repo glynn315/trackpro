@@ -3,7 +3,9 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { MediaField } from "@/components/admin/MediaField";
 import { createProduct } from "../actions";
 
-export default function NewProductPage() {
+export default async function NewProductPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
+
   return (
     <>
       <PageHeader title="Add Product">
@@ -16,6 +18,11 @@ export default function NewProductPage() {
       </PageHeader>
 
       <div className="p-5 lg:p-8">
+        {error && (
+          <div className="mb-5 max-w-2xl rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            Could not add the product — {error !== "1" ? error : "check the fields and try again."}
+          </div>
+        )}
         <form
           action={createProduct}
           className="max-w-2xl space-y-5 rounded-2xl border border-gray-200 bg-white p-7"

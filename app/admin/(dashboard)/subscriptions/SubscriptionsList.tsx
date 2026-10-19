@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { peso } from "@/lib/admin/format";
-import type { AdminSubscription, AdminSubscriptionStatus } from "@/lib/admin/types";
-import { deleteSubscription, generateInvoice, updateSubscription } from "./actions";
+import type { AdminCustomer, AdminSubscription, AdminSubscriptionStatus, SubscriptionsResponse } from "@/lib/admin/types";
+import { deleteSubscription, editSubscription, generateInvoice, updateSubscription } from "./actions";
+import { EditSubscriptionForm } from "./EditSubscriptionForm";
 
 const statusBadge: Record<AdminSubscriptionStatus, string> = {
   active: "bg-emerald-100 text-emerald-700",
@@ -37,22 +38,43 @@ function renewalNote(days: number): { text: string; className: string } {
   return { text: `in ${Math.round(days / 30)} months`, className: "text-gray-500" };
 }
 
-export function SubscriptionsList({ items }: { items: AdminSubscription[] }) {
+export function SubscriptionsList({
+  items,
+  plans,
+  customers,
+}: {
+  items: AdminSubscription[];
+  plans: SubscriptionsResponse["plans"];
+  customers: AdminCustomer[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const editing = items.find((s) => s.id === editingId) ?? null;
 
-  function run(id: number, action: () => Promise<{ ok: boolean; message?: string }>) {
+  function run(id: number, action: () => Promise<{ ok: boolean; message?: string }>, after?: () => void) {
     setBusyId(id);
     setError("");
     startTransition(async () => {
       const result = await action();
       setBusyId(null);
       if (!result.ok) setError(result.message ?? "Something went wrong.");
-      else router.refresh();
+      else {
+        after?.();
+        router.refresh();
+      }
     });
   }
+
+  const edit = (sub: AdminSubscription) => {
+    setEditingId(sub.id);
+    // The form opens above the table — bring it into view.
+    requestAnimationFrame(() =>
+      document.getElementById("subscription-edit")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+  };
 
   const changeStatus = (sub: AdminSubscription, status: string) =>
     run(sub.id, () => updateSubscription(sub.id, { status }));
@@ -81,6 +103,20 @@ export function SubscriptionsList({ items }: { items: AdminSubscription[] }) {
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
+        </div>
+      )}
+
+      {editing && (
+        <div className="mb-4">
+          <EditSubscriptionForm
+            key={editing.id}
+            sub={editing}
+            plans={plans}
+            customers={customers}
+            busy={pending && busyId === editing.id}
+            onSave={(fd) => run(editing.id, () => editSubscription(editing.id, fd), () => setEditingId(null))}
+            onCancel={() => setEditingId(null)}
+          />
         </div>
       )}
 
@@ -145,6 +181,14 @@ export function SubscriptionsList({ items }: { items: AdminSubscription[] }) {
                     <div className="flex flex-col items-end gap-1">
                       <button
                         type="button"
+                        onClick={() => edit(sub)}
+                        disabled={pending}
+                        className="text-xs font-semibold text-gray-700 hover:text-brand disabled:opacity-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => invoice(sub)}
                         disabled={pending}
                         className="text-xs font-semibold text-brand hover:underline disabled:opacity-50"
@@ -197,7 +241,15 @@ export function SubscriptionsList({ items }: { items: AdminSubscription[] }) {
               <p className="mt-2 text-xs">
                 Renews {fmtDate(sub.renews_at)} <span className={note.className}>({note.text})</span>
               </p>
-              <div className="mt-3 flex items-center gap-4">
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => edit(sub)}
+                  disabled={pending}
+                  className="text-xs font-semibold text-gray-700 hover:text-brand disabled:opacity-50"
+                >
+                  Edit
+                </button>
                 <button
                   type="button"
                   onClick={() => invoice(sub)}
