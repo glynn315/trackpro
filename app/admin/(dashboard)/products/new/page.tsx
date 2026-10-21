@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MediaField } from "@/components/admin/MediaField";
+import { CartOptionsField } from "@/components/admin/CartOptionsField";
+import { adminGet } from "@/lib/admin/api";
+import type { AdminAddOn, AdminBandwidthPackage } from "@/lib/admin/types";
 import { createProduct } from "../actions";
 
 export default async function NewProductPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
+  const [{ data: addOns }, { data: bandwidthPackages }] = await Promise.all([
+    adminGet<{ data: AdminAddOn[] }>("/api/admin/add-ons"),
+    adminGet<{ data: AdminBandwidthPackage[] }>("/api/admin/bandwidth-packages"),
+  ]);
 
   return (
     <>
@@ -62,6 +69,21 @@ export default async function NewProductPage({ searchParams }: { searchParams: P
             <div className="sm:col-span-2">
               <Label>Photos &amp; video clips</Label>
               <MediaField />
+            </div>
+
+            <div className="sm:col-span-2">
+              <Label>Add to cart options</Label>
+              <CartOptionsField
+                initial={{
+                  hardware_options: [],
+                  add_on_slugs: addOns.filter((a) => a.is_active).map((a) => a.slug),
+                  offers_bandwidth: true,
+                  bandwidth_options: [],
+                  requires_plan: true,
+                }}
+                addOns={addOns}
+                defaultBandwidth={bandwidthPackages.filter((p) => p.is_active)}
+              />
             </div>
 
             <div>

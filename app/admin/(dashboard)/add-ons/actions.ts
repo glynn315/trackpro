@@ -32,6 +32,22 @@ function refresh() {
   revalidatePath("/products");
 }
 
+export type BandwidthPackageInput = { slug?: string; name: string; description: string; price: number; is_active: boolean };
+
+/** Replace the video bandwidth package list (offered in the add-to-cart options). */
+export async function saveBandwidthPackages(packages: BandwidthPackageInput[]): Promise<{ ok: boolean; message?: string }> {
+  const res = await adminApi("/api/admin/bandwidth-packages", { method: "PUT", json: { packages } });
+  guard(res.status);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const first = body?.errors ? (Object.values(body.errors).flat()[0] as string | undefined) : undefined;
+    return { ok: false, message: first ?? body?.message ?? `Could not save (${res.status}).` };
+  }
+  revalidatePath("/admin/add-ons");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function saveAddOn(formData: FormData) {
   const id = toInt(formData.get("id"));
 

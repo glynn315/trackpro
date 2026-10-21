@@ -5,13 +5,19 @@ import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/Button";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { MediaGallery } from "@/components/ui/MediaGallery";
+import { ProductOptionsModal } from "@/components/ui/ProductOptionsModal";
+import { hasChoices, productChoices, startingPrice } from "@/lib/cart-options";
 import { formatPrice, productDetails } from "@/lib/site";
 import type { StorePlan } from "@/lib/plans";
 import type { CatalogProduct } from "@/lib/products";
 
 export function ProductCard({ product, plans }: { product: CatalogProduct; plans: readonly StorePlan[] }) {
-  const { addItem, openDrawer } = useCart();
+  const { addItem, openDrawer, store } = useCart();
   const [added, setAdded] = useState(false);
+  // Products with hardware options, add-ons, bandwidth or a plan open the options popup first.
+  const [picking, setPicking] = useState<"add" | "buy" | null>(null);
+  const withOptions = hasChoices(productChoices(product, store));
+  const fromPrice = startingPrice(product);
   const detail = productDetails[product.id];
   // Recommended plans come from the live plan list, so prices follow the admin.
   const recommended = detail
@@ -26,15 +32,21 @@ export function ProductCard({ product, plans }: { product: CatalogProduct; plans
   const lowStock =
     product.inStock && product.stock !== null && product.stock <= 5;
 
-  function handleAdd() {
-    if (outOfStock) return;
-    addItem(product.id, 1);
+  function flashAdded() {
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
   }
 
+  function handleAdd() {
+    if (outOfStock) return;
+    if (withOptions) return setPicking("add");
+    addItem(product.id, 1);
+    flashAdded();
+  }
+
   function handleBuyNow() {
     if (outOfStock) return;
+    if (withOptions) return setPicking("buy");
     addItem(product.id, 1);
     openDrawer();
   }
@@ -129,7 +141,8 @@ export function ProductCard({ product, plans }: { product: CatalogProduct; plans
       {/* Price */}
       <div className="mt-5 flex items-baseline gap-2 border-t border-line pt-4">
         <span className="text-2xl font-extrabold tracking-tight text-ink">
-          {formatPrice(product.price)}
+          {product.hardwareOptions.length > 1 && <span className="mr-1 text-xs font-semibold text-muted">From</span>}
+          {formatPrice(fromPrice)}
         </span>
         {range ? (
           <span className="text-xs text-muted">
@@ -195,6 +208,15 @@ export function ProductCard({ product, plans }: { product: CatalogProduct; plans
             Buy Now
           </Button>
         </div>
+      )}
+
+      {picking && (
+        <ProductOptionsModal
+          product={product}
+          buyNow={picking === "buy"}
+          onClose={() => setPicking(null)}
+          onAdded={picking === "add" ? flashAdded : undefined}
+        />
       )}
     </article>
   );

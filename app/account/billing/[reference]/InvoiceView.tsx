@@ -7,7 +7,8 @@ import { AccountError, getInvoice } from "@/lib/account";
 import { ErrorState, PanelSkeleton } from "@/components/account/ui";
 import { InvoicePrintStyles } from "@/components/invoice/InvoicePrint";
 import { PrintButton } from "@/components/invoice/PrintButton";
-import { RenewalInvoiceSheet, type RenewalInvoice } from "@/components/invoice/RenewalInvoiceSheet";
+import { InvoiceDocument } from "@/components/invoice/InvoiceDocument";
+import { RenewalInvoiceSheet, statusPill, type RenewalInvoice } from "@/components/invoice/RenewalInvoiceSheet";
 
 /** The customer's printable copy of one renewal invoice. */
 export function InvoiceView({ reference }: { reference: string }) {
@@ -60,6 +61,8 @@ export function InvoiceView({ reference }: { reference: string }) {
 
       {error ? (
         <ErrorState message={error} onRetry={reload} />
+      ) : invoice?.printout ? (
+        <InvoiceDocument invoice={invoice.printout} status={statusPill[invoice.status]} paid={invoice.status === "paid"} />
       ) : invoice ? (
         <RenewalInvoiceSheet invoice={invoice} />
       ) : (

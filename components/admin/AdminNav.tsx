@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/add-ons", label: "Add-ons", icon: "🧩" },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: "🔁" },
   { href: "/admin/payments", label: "Payments", icon: "💳" },
+  { href: "/admin/invoices", label: "Invoices", icon: "🧾" },
   { href: "/admin/reports", label: "Sales Reports", icon: "📈" },
   { href: "/admin/expenses", label: "Expenses", icon: "💸" },
   { href: "/admin/wallets", label: "Wallets", icon: "👛" },

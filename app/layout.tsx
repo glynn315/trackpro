@@ -6,6 +6,8 @@ import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { CartDrawer } from "@/components/ui/CartDrawer";
 import { getCatalog } from "@/lib/products";
+import { getAddOns } from "@/lib/addons";
+import { getPlans } from "@/lib/plans";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +35,9 @@ export default async function RootLayout({
   // The cart needs the live catalog to price and label admin-created products,
   // not just the nine hardcoded ones. Shares the same revalidated fetch as the
   // products grid, so this costs no extra request.
-  const catalog = await getCatalog();
+  // Add-ons and plans feed the add-to-cart options popup (same revalidated
+  // fetches the homepage sections use); bandwidth packages come with each product.
+  const [catalog, addOns, plans] = await Promise.all([getCatalog(), getAddOns(), getPlans()]);
 
   return (
     <html
@@ -42,7 +46,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <CartProvider catalog={catalog}>
+          <CartProvider catalog={catalog} store={{ addOns, plans }}>
             {children}
             <CartDrawer />
           </CartProvider>

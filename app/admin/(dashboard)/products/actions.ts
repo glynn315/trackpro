@@ -34,7 +34,43 @@ function productJson(formData: FormData) {
     stock: toInt(formData.get("stock")),
     featured: formData.get("featured") === "1",
     is_active: formData.get("is_active") !== "0",
+    ...cartOptionsJson(formData),
   };
+}
+
+/** Add-to-cart choices from `CartOptionsField` — omitted when the form doesn't include it. */
+function cartOptionsJson(formData: FormData) {
+  if (formData.get("cart_options") !== "1") return {};
+  const list = (field: string): unknown[] => {
+    try {
+      const v = JSON.parse(String(formData.get(field) ?? "[]"));
+      return Array.isArray(v) ? v : [];
+    } catch {
+      return [];
+    }
+  };
+  return {
+    hardware_options: list("hardware_options"),
+    bandwidth_options: list("bandwidth_options"),
+    add_on_slugs: formData.getAll("add_on_slugs").map(String),
+    offers_bandwidth: formData.get("offers_bandwidth") === "1",
+    requires_plan: formData.get("requires_plan") === "1",
+  };
+}
+
+export type HardwareDefault = { name: string; extra: number; image?: string | null; image_url?: string | null };
+
+/** Store-wide hardware options for products that don't set their own. */
+export async function saveHardwareDefaults(options: HardwareDefault[]): Promise<{ ok: boolean; message?: string }> {
+  const res = await adminApi("/api/admin/hardware-defaults", { method: "PUT", json: { options } });
+  if (res.status === 401 || res.status === 403) redirect("/admin/login");
+  if (!res.ok) {
+    const message = await errorMessage(res);
+    return { ok: false, message: message === "1" ? `Could not save (${res.status}).` : message };
+  }
+  revalidatePath("/admin/products");
+  revalidatePath("/", "layout");
+  return { ok: true };
 }
 
 async function errorMessage(res: Response): Promise<string> {

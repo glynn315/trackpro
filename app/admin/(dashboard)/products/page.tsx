@@ -4,6 +4,8 @@ import { Pagination } from "@/components/admin/Pagination";
 import { adminGet } from "@/lib/admin/api";
 import type { AdminProduct, PageMeta } from "@/lib/admin/types";
 import { ProductsList } from "./ProductsList";
+import { HardwareDefaultsManager } from "./HardwareDefaultsManager";
+import type { HardwareDefault } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +15,10 @@ export default async function ProductsPage({
   searchParams: Promise<{ saved?: string; page?: string }>;
 }) {
   const { saved, page } = await searchParams;
-  const { data, meta } = await adminGet<{ data: AdminProduct[]; meta: PageMeta }>(
-    `/api/admin/products${page ? `?page=${page}` : ""}`
-  );
+  const [{ data, meta }, { data: hardwareDefaults }] = await Promise.all([
+    adminGet<{ data: AdminProduct[]; meta: PageMeta }>(`/api/admin/products${page ? `?page=${page}` : ""}`),
+    adminGet<{ data: HardwareDefault[] }>("/api/admin/hardware-defaults"),
+  ]);
 
   return (
     <>
@@ -34,6 +37,8 @@ export default async function ProductsPage({
 
         <ProductsList key={meta.current_page} items={data} />
         <Pagination meta={meta} />
+
+        <HardwareDefaultsManager initial={hardwareDefaults} />
       </div>
     </>
   );

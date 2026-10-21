@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MediaField } from "@/components/admin/MediaField";
-import { adminApi } from "@/lib/admin/api";
-import type { AdminProduct } from "@/lib/admin/types";
+import { CartOptionsField } from "@/components/admin/CartOptionsField";
+import { adminApi, adminGet } from "@/lib/admin/api";
+import type { AdminAddOn, AdminBandwidthPackage, AdminProduct } from "@/lib/admin/types";
 import { updateProduct } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,10 @@ export default async function EditProductPage({
   if (res.status === 404) notFound();
   if (!res.ok) throw new Error(`Failed to load product (${res.status})`);
   const { data: product } = (await res.json()) as { data: AdminProduct };
+  const [{ data: addOns }, { data: bandwidthPackages }] = await Promise.all([
+    adminGet<{ data: AdminAddOn[] }>("/api/admin/add-ons"),
+    adminGet<{ data: AdminBandwidthPackage[] }>("/api/admin/bandwidth-packages"),
+  ]);
 
   return (
     <>
@@ -76,6 +81,22 @@ export default async function EditProductPage({
             <div className="sm:col-span-2">
               <Label>Photos &amp; video clips</Label>
               <MediaField initial={product.media ?? []} />
+            </div>
+
+            <div className="sm:col-span-2">
+              <Label>Add to cart options</Label>
+              <CartOptionsField
+                initial={{
+                  hardware_options: product.hardware_options ?? [],
+                  // Never configured = every add-on offered.
+                  add_on_slugs: product.add_on_slugs ?? addOns.map((a) => a.slug),
+                  offers_bandwidth: product.offers_bandwidth ?? true,
+                  bandwidth_options: product.bandwidth_options ?? [],
+                  requires_plan: product.requires_plan,
+                }}
+                addOns={addOns}
+                defaultBandwidth={bandwidthPackages.filter((p) => p.is_active)}
+              />
             </div>
 
             <div>

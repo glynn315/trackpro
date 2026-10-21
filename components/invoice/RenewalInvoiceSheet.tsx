@@ -1,3 +1,4 @@
+import type { SalesInvoice } from "@/lib/admin/types";
 import {
   InvoiceFooter,
   InvoiceLabel,
@@ -26,6 +27,8 @@ export type RenewalInvoice = {
   payment_method: string | null;
   paid_at: string | null;
   checkout_url: string | null;
+  /** The invoice on the company template, with the admin's saved edits — shown instead of this sheet. */
+  printout?: SalesInvoice;
 };
 
 const peso = invoicePeso;
@@ -38,14 +41,17 @@ function fmtDate(value: string | null) {
     : d.toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" });
 }
 
-const statusPill: Record<RenewalInvoiceStatus, { label: string; cls: string }> = {
+export const statusPill: Record<RenewalInvoiceStatus, { label: string; cls: string }> = {
   paid: { label: "Paid", cls: "border-emerald-600 bg-emerald-50 text-emerald-700" },
   unpaid: { label: "Unpaid", cls: "border-brand bg-brand/5 text-brand" },
   awaiting: { label: "Unpaid", cls: "border-brand bg-brand/5 text-brand" },
   void: { label: "Void", cls: "border-gray-400 bg-gray-50 text-gray-500" },
 };
 
-/** A subscription renewal invoice on a Letter-size page — pair with `<InvoicePrintStyles />`. */
+/**
+ * A subscription renewal invoice on a Letter-size page — pair with `<InvoicePrintStyles />`.
+ * Fallback for an API that doesn't send `printout` yet; otherwise use `InvoiceDocument`.
+ */
 export function RenewalInvoiceSheet({ invoice: inv }: { invoice: RenewalInvoice }) {
   // Plan prices can change after an invoice is raised — the invoice amount is what's owed.
   const qty = inv.quantity > 0 && inv.quantity * inv.unit_price === inv.amount ? inv.quantity : 1;

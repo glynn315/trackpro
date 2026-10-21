@@ -31,26 +31,48 @@ export function InvoicePrintStyles() {
 export const invoicePaperClass =
   "mx-auto flex w-full max-w-[816px] flex-col bg-white p-6 text-[13px] leading-snug text-gray-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200 sm:min-h-[1056px] sm:p-12";
 
+/** Company logo at the top of the letterhead. */
+export function InvoiceLogo() {
+  return <Image src="/logo.png" alt={siteConfig.name} width={1640} height={240} priority className="h-7 w-auto" />;
+}
+
+/** Letterhead text as the editor starts it: company name, then address and contact lines. */
+export function invoiceDefaultFrom() {
+  const { location, contact } = siteConfig;
+  return {
+    name: siteConfig.name,
+    lines: [
+      `${location.address}, ${location.city}`,
+      `${location.region} ${location.postalCode}, Philippines`,
+      `${contact.phonePrimary} · ${contact.salesEmail}`,
+    ].join("\n"),
+  };
+}
+
 /** Company letterhead (left side of every invoice header). */
 export function InvoiceLetterhead() {
-  const { location, contact } = siteConfig;
+  const from = invoiceDefaultFrom();
   return (
     <div className="space-y-2">
-      <Image src="/logo.png" alt={siteConfig.name} width={1640} height={240} priority className="h-7 w-auto" />
+      <InvoiceLogo />
       <div className="text-[11.5px] leading-relaxed text-gray-500">
-        <p className="font-semibold text-gray-800">{siteConfig.name}</p>
-        <p>
-          {location.address}, {location.city}
-        </p>
-        <p>
-          {location.region} {location.postalCode}, Philippines
-        </p>
-        <p>
-          {contact.phonePrimary} · {contact.salesEmail}
-        </p>
+        <p className="font-semibold text-gray-800">{from.name}</p>
+        {from.lines.split("\n").map((line) => (
+          <p key={line}>{line}</p>
+        ))}
       </div>
     </div>
   );
+}
+
+/** Footer text as the editor starts it. */
+export function invoiceDefaultFooter() {
+  const { contact, url } = siteConfig;
+  return [
+    `Thank you for choosing ${siteConfig.name}.`,
+    `Questions about this invoice? Call ${contact.phonePrimary} or email ${contact.salesEmail}.`,
+    `This is a system-generated invoice and is valid without a signature · ${url.replace(/^https?:\/\//, "")}`,
+  ].join("\n");
 }
 
 /** Invoice money: ₱1,299.00 */

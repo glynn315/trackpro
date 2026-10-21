@@ -2,6 +2,8 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { adminGet } from "@/lib/admin/api";
 import type { AdminAddOn } from "@/lib/admin/types";
 import { AddOnsManager } from "./AddOnsManager";
+import { BandwidthManager } from "./BandwidthManager";
+import type { BandwidthPackageInput } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,10 @@ export default async function AddOnsPage({
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const sp = await searchParams;
-  const { data } = await adminGet<{ data: AdminAddOn[] }>("/api/admin/add-ons");
+  const [{ data }, { data: bandwidth }] = await Promise.all([
+    adminGet<{ data: AdminAddOn[] }>("/api/admin/add-ons"),
+    adminGet<{ data: BandwidthPackageInput[] }>("/api/admin/bandwidth-packages"),
+  ]);
 
   return (
     <>
@@ -29,11 +34,14 @@ export default async function AddOnsPage({
         )}
 
         <p className="mb-6 max-w-2xl text-sm text-gray-600">
-          Accessories shown in the homepage <strong>Optional Add-ons</strong> section. Active add-ons
+          Accessories shown in the homepage <strong>Optional Add-ons</strong> section and offered in a
+          product&apos;s add-to-cart options (choose which per product under Products → Edit). Active add-ons
           appear on the site in display order (lowest first); changes can take up to a minute to show.
         </p>
 
         <AddOnsManager addOns={data} />
+
+        <BandwidthManager initial={bandwidth} />
       </div>
     </>
   );

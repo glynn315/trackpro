@@ -10,20 +10,37 @@ import {
   type ReactNode,
 } from "react";
 import { products as staticProducts } from "@/lib/site";
-import type { CatalogProduct } from "@/lib/products";
+import { NO_CART_CHOICES, type CatalogProduct } from "@/lib/products";
+import {
+  cleanOptions,
+  EMPTY_STORE_OPTIONS,
+  lineKey,
+  priceSelection,
+  type CartOptions,
+  type PricedSelection,
+  type StoreOptions,
+} from "@/lib/cart-options";
 
 const STORAGE_KEY = "trackpro:cart";
 
 export type CartItem = {
+  /** Product + picked options — the same product with different picks is its own line. */
+  key: string;
   // Product slug/id, widened to string so live (admin-managed) inventory can
   // flow through the cart, not just the statically-typed catalog ids.
   productId: string;
   qty: number;
+  options?: CartOptions;
 };
 
 export type CartLine = CartItem & {
   product: CatalogProduct;
+  picked: PricedSelection;
+  /** Hardware + add-ons for the line (one-time). */
   lineTotal: number;
+  /** First plan period (plan + bandwidth) for the line, paid at checkout. */
+  planTotal: number;
+  /** Legacy built-in monthly fee — only for products ordered without a chosen plan. */
   subscriptionTotal: number;
 };
 
@@ -31,14 +48,21 @@ type CartContextValue = {
   items: CartItem[];
   lines: CartLine[];
   itemCount: number;
+  /** Hardware + add-ons. */
   subtotal: number;
+  /** First period of every chosen plan (+ bandwidth). */
+  planTotal: number;
+  /** Due at checkout: subtotal + planTotal. */
+  total: number;
   subscriptionTotal: number;
+  /** Add-ons and plans the options popup offers. */
+  store: StoreOptions;
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
-  addItem: (productId: string, qty?: number) => void;
-  setQty: (productId: string, qty: number) => void;
-  removeItem: (productId: string) => void;
+  addItem: (productId: string, qty?: number, options?: CartOptions) => void;
+  setQty: (key: string, qty: number) => void;
+  removeItem: (key: string) => void;
   clearCart: () => void;
 };
 
@@ -54,11 +78,13 @@ const STATIC_FALLBACK: CatalogProduct[] = staticProducts.map((p) => ({
   featured: "featured" in p ? Boolean(p.featured) : false,
   stock: null,
   inStock: true,
+  ...NO_CART_CHOICES,
 }));
 
 export function CartProvider({
   children,
   catalog,
+  store = EMPTY_STORE_OPTIONS,
 }: {
   children: ReactNode;
   /**
@@ -67,6 +93,7 @@ export function CartProvider({
    * hardcoded products in `lib/site.ts`.
    */
   catalog?: CatalogProduct[];
+  store?: StoreOptions;
 }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -91,7 +118,12 @@ export function CartProvider({
       if (raw) {
         const parsed = JSON.parse(raw) as CartItem[];
         if (Array.isArray(parsed)) {
-          setItems(parsed.filter((it) => typeof it?.productId === "string" && it.qty > 0));
+          setItems(
+            parsed
+              .filter((it) => typeof it?.productId === "string" && it.qty > 0)
+              // Carts saved before options existed have no key.
+              .map((it) => ({ ...it, key: it.key ?? lineKey(it.productId, it.options) }))
+          );
         }
       }
     } catch {
@@ -110,27 +142,27 @@ export function CartProvider({
     }
   }, [items, hydrated]);
 
-  const addItem = useCallback((productId: string, qty: number = 1) => {
+  const addItem = useCallback((productId: string, qty: number = 1, picked?: CartOptions) => {
+    const options = picked ? cleanOptions(picked) : undefined;
+    const key = lineKey(productId, options);
     setItems((prev) => {
-      const existing = prev.find((it) => it.productId === productId);
+      const existing = prev.find((it) => it.key === key);
       if (existing) {
-        return prev.map((it) =>
-          it.productId === productId ? { ...it, qty: it.qty + qty } : it
-        );
+        return prev.map((it) => (it.key === key ? { ...it, qty: it.qty + qty } : it));
       }
-      return [...prev, { productId, qty }];
+      return [...prev, { key, productId, qty, ...(options ? { options } : {}) }];
     });
   }, []);
 
-  const setQty = useCallback((productId: string, qty: number) => {
+  const setQty = useCallback((key: string, qty: number) => {
     setItems((prev) => {
-      if (qty <= 0) return prev.filter((it) => it.productId !== productId);
-      return prev.map((it) => (it.productId === productId ? { ...it, qty } : it));
+      if (qty <= 0) return prev.filter((it) => it.key !== key);
+      return prev.map((it) => (it.key === key ? { ...it, qty } : it));
     });
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((it) => it.productId !== productId));
+  const removeItem = useCallback((key: string) => {
+    setItems((prev) => prev.filter((it) => it.key !== key));
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
@@ -144,19 +176,23 @@ export function CartProvider({
         .map((it) => {
           const product = productById(it.productId);
           if (!product) return null;
+          const picked = priceSelection(product, it.options ?? {}, store);
           return {
             ...it,
             product,
-            lineTotal: product.price * it.qty,
-            subscriptionTotal: product.subscription * it.qty,
+            picked,
+            lineTotal: picked.unitPrice * it.qty,
+            planTotal: picked.planUnit * it.qty,
+            subscriptionTotal: picked.plan ? 0 : product.subscription * it.qty,
           };
         })
         .filter((l): l is CartLine => l !== null),
-    [items, productById]
+    [items, productById, store]
   );
 
   const itemCount = useMemo(() => lines.reduce((sum, l) => sum + l.qty, 0), [lines]);
   const subtotal = useMemo(() => lines.reduce((sum, l) => sum + l.lineTotal, 0), [lines]);
+  const planTotal = useMemo(() => lines.reduce((sum, l) => sum + l.planTotal, 0), [lines]);
   const subscriptionTotal = useMemo(
     () => lines.reduce((sum, l) => sum + l.subscriptionTotal, 0),
     [lines]
@@ -167,7 +203,10 @@ export function CartProvider({
     lines,
     itemCount,
     subtotal,
+    planTotal,
+    total: subtotal + planTotal,
     subscriptionTotal,
+    store,
     drawerOpen,
     openDrawer,
     closeDrawer,

@@ -27,7 +27,21 @@ export type CatalogProduct = {
   featured?: boolean;
   stock: number | null;
   inStock: boolean;
+  /** Add-to-cart choices set per product in the admin (empty / false = not offered). */
+  hardwareOptions: readonly HardwareOption[];
+  /** null = never configured: every active add-on is offered. */
+  addOnSlugs: readonly string[] | null;
+  offersBandwidth: boolean;
+  /** Video bandwidth packages for this product — its own, or the defaults (resolved by the API). */
+  bandwidthOptions: readonly BandwidthPackage[];
+  requiresPlan: boolean;
 };
+
+/** A hardware variant, e.g. "Device + IoT + Installation" — its price replaces the base price. */
+export type HardwareOption = { name: string; price: number; image_url?: string | null };
+
+/** A video bandwidth package, priced per device per month. */
+export type BandwidthPackage = { slug: string; name: string; description: string; price: number };
 
 type StaticProduct = (typeof staticProducts)[number];
 
@@ -46,6 +60,11 @@ type ApiProduct = {
   featured: boolean;
   stock: number;
   is_active: boolean;
+  hardware_options?: HardwareOption[] | null;
+  add_on_slugs?: string[] | null;
+  offers_bandwidth?: boolean | null;
+  bandwidth_options?: BandwidthPackage[] | null;
+  requires_plan?: boolean;
 };
 
 const KNOWN_ICONS = new Set<string>(iconNames);
@@ -96,6 +115,11 @@ function fromApi(live: ApiProduct, base?: StaticProduct): CatalogProduct {
     featured: Boolean(live.featured),
     stock: live.stock,
     inStock: live.stock > 0,
+    hardwareOptions: live.hardware_options ?? [],
+    addOnSlugs: live.add_on_slugs ?? null,
+    offersBandwidth: live.offers_bandwidth !== false,
+    bandwidthOptions: live.bandwidth_options ?? [],
+    requiresPlan: Boolean(live.requires_plan),
   };
 }
 
@@ -108,8 +132,18 @@ function fromStatic(p: StaticProduct): CatalogProduct {
     featured: "featured" in p ? Boolean(p.featured) : false,
     stock: null,
     inStock: true,
+    ...NO_CART_CHOICES,
   };
 }
+
+/** Static catalog (API down): no per-product choices are known. */
+export const NO_CART_CHOICES = {
+  hardwareOptions: [],
+  addOnSlugs: [],
+  offersBandwidth: false,
+  bandwidthOptions: [],
+  requiresPlan: false,
+} as const;
 
 /**
  * `icon` is a free-text field in the admin product form, so it can be blank or

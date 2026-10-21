@@ -19,6 +19,14 @@ export type AdminProduct = {
   featured: boolean;
   stock: number;
   is_active: boolean;
+  /** Add-to-cart choices (see CartOptionsField). */
+  hardware_options: { name: string; price: number; image: string | null; image_url: string | null }[] | null;
+  add_on_slugs: string[] | null;
+  /** null = not set: offered by default. */
+  offers_bandwidth: boolean | null;
+  /** This product's own video bandwidth packages — empty = the defaults. */
+  bandwidth_options: { slug: string; name: string; description: string; price: number }[] | null;
+  requires_plan: boolean;
 };
 
 export type AdminOrderItem = {
@@ -319,6 +327,9 @@ export type AdminClientDetail = Omit<
   totals: { hardware_paid: number; billing_paid: number; billing_outstanding: number };
 };
 
+/** A default video bandwidth package (Add-ons → Video Bandwidth). */
+export type AdminBandwidthPackage = { slug: string; name: string; description: string; price: number; is_active: boolean };
+
 export type AdminAddOn = {
   id: number;
   slug: string;
@@ -396,13 +407,43 @@ export type TodaySalesResponse = {
   totals: { amount: number; count: number; orders: number; renewals: number };
 };
 
+/** An editable invoice — a sales invoice for an order, or a renewal invoice's printout. */
 export type SalesInvoice = {
+  /** Heading on the page, e.g. "Invoice" or "Statement of Account". */
+  title?: string;
   number: string;
   date: string;
+  due_date?: string | null;
   bill_to: { name: string; company: string | null; email: string | null; phone: string | null; address: string | null };
   items: { description: string; qty: number; unit_price: number }[];
   discount: number;
+  /** Caption above the notes, e.g. "Notes" or "Payment terms". */
+  notes_label?: string;
   notes: string | null;
+  /** Extra lines under Bill to, e.g. TIN or account number. */
+  bill_to_fields?: InvoiceField[];
+  /** Extra rows in the details box, e.g. PO number or terms. */
+  details?: InvoiceField[];
+  /** Extra blocks below the totals, e.g. bank details or warranty. */
+  sections?: { label: string; body: string }[];
+  /** Letterhead text — null uses the company defaults. */
+  from?: { name: string; lines: string } | null;
+  /** Footer text — null uses the company default. */
+  footer?: string | null;
+};
+
+export type InvoiceField = { label: string; value: string };
+
+/** A row in the admin's list of invoices written from scratch. */
+export type CustomInvoiceSummary = {
+  id: number;
+  number: string;
+  title: string;
+  date: string;
+  customer_name: string;
+  company: string | null;
+  total: number;
+  updated_at: string | null;
 };
 
 /** One renewal invoice with the billing details its printable copy needs. */
@@ -411,4 +452,7 @@ export type AdminSubscriptionInvoiceDetail = AdminSubscriptionInvoice & {
   quantity: number;
   unit_price: number;
   billing_period: "monthly" | "yearly" | null;
+  /** The printable copy — the admin's saved edits, or generated from the invoice. */
+  printout: SalesInvoice;
+  printout_edited: boolean;
 };

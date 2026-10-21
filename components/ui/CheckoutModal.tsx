@@ -23,7 +23,7 @@ export function CheckoutModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const { lines, subtotal, subscriptionTotal, clearCart } = useCart();
+  const { lines, subtotal, planTotal, total, subscriptionTotal, clearCart } = useCart();
   const { user, token, resendVerification, refresh } = useAuth();
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -38,6 +38,7 @@ export function CheckoutModal({
     plan_name: string;
     price: number;
     renews_at: string;
+    billing_period?: "monthly" | "yearly";
   } | null>(null);
 
   // Esc + body scroll lock
@@ -50,16 +51,24 @@ export function CheckoutModal({
   }, [onClose, status]);
 
   function buildOrderSummary(): string {
-    const lineDescriptions = lines.map(
-      (l) =>
-        `• ${l.qty} × ${l.product.name} (${l.product.model}) — ${formatPrice(l.lineTotal)}` +
-        (l.subscriptionTotal > 0 ? ` + ${formatPrice(l.subscriptionTotal)}/mo` : "")
-    );
+    const lineDescriptions = lines.flatMap((l) => {
+      const { hardware, addOns, plan, bandwidth } = l.picked;
+      return [
+        `• ${l.qty} × ${l.product.name} (${l.product.model}) — ${formatPrice(l.lineTotal + l.planTotal)}` +
+          (l.subscriptionTotal > 0 ? ` + ${formatPrice(l.subscriptionTotal)}/mo` : ""),
+        hardware ? `    Hardware: ${hardware.name}` : "",
+        addOns.length ? `    Add-ons: ${addOns.map((a) => a.name).join(", ")}` : "",
+        plan ? `    Subscription: ${plan.name} (${plan.billing_period})` : "",
+        bandwidth ? `    Video bandwidth: ${bandwidth.name}` : "",
+      ].filter(Boolean);
+    });
     return [
       ...lineDescriptions,
       "",
-      `Hardware subtotal: ${formatPrice(subtotal)}`,
+      `Hardware & add-ons: ${formatPrice(subtotal)}`,
+      planTotal > 0 ? `Platform subscription (first period): ${formatPrice(planTotal)}` : "",
       subscriptionTotal > 0 ? `Monthly subscription: ${formatPrice(subscriptionTotal)}/mo` : "",
+      `Total: ${formatPrice(total)}`,
     ]
       .filter(Boolean)
       .join("\n");
@@ -74,9 +83,13 @@ export function CheckoutModal({
     setStockIssues([]);
 
     // Confirm stock is still available before placing the order.
-    const issues = await checkCartStock(
-      lines.map((l) => ({ productId: l.productId, name: l.product.name, qty: l.qty }))
-    );
+    // The same product can sit on several lines (different options) — check the combined quantity.
+    const perProduct = new Map<string, { productId: string; name: string; qty: number }>();
+    for (const l of lines) {
+      const cur = perProduct.get(l.productId);
+      perProduct.set(l.productId, { productId: l.productId, name: l.product.name, qty: (cur?.qty ?? 0) + l.qty });
+    }
+    const issues = await checkCartStock([...perProduct.values()]);
     if (issues.length > 0) {
       setStockIssues(issues);
       setStatus("idle");
@@ -91,8 +104,19 @@ export function CheckoutModal({
       address: String(data.get("address") ?? "").trim(),
       notes: String(data.get("notes") ?? "").trim() || undefined,
     };
-    const items = lines.map((l) => ({ slug: l.productId, qty: l.qty }));
-    const orderedTotal = subtotal;
+    const items = lines.map((l) => ({
+      slug: l.productId,
+      qty: l.qty,
+      ...(l.options && {
+        options: {
+          hardware: l.options.hardware,
+          add_ons: l.options.addOns,
+          bandwidth: l.options.bandwidth,
+          plan: l.options.plan,
+        },
+      }),
+    }));
+    const orderedTotal = total;
     const summary = buildOrderSummary();
 
     try {
@@ -122,7 +146,7 @@ export function CheckoutModal({
       }
 
       const reference: string = json.order?.reference ?? "";
-      setOrder({ reference, total: json.order?.hardware_subtotal ?? orderedTotal });
+      setOrder({ reference, total: json.order?.total ?? orderedTotal });
       setCheckoutUrl(json.checkout_url ?? null);
 
       // Best-effort team notification by email — non-blocking.
@@ -252,7 +276,7 @@ export function CheckoutModal({
                   <div className="rounded-xl border border-line bg-cloud p-4 text-left text-sm">
                     <p className="font-semibold text-ink">Tracking subscription active</p>
                     <p className="mt-1 text-xs text-muted">
-                      {subscription.plan_name} — included until{" "}
+                      {subscription.plan_name} — paid until{" "}
                       <span className="font-semibold text-ink">
                         {new Date(subscription.renews_at).toLocaleDateString("en-PH", {
                           month: "long",
@@ -260,7 +284,8 @@ export function CheckoutModal({
                           year: "numeric",
                         })}
                       </span>
-                      , then {formatPrice(subscription.price)} per year.
+                      , then {formatPrice(subscription.price)} per{" "}
+                      {subscription.billing_period === "monthly" ? "month" : "year"}.
                     </p>
                     <Link
                       href="/account/subscription"
@@ -431,7 +456,7 @@ export function CheckoutModal({
                 </h4>
                 <ul className="space-y-3 border-b border-line pb-4">
                   {lines.map((line) => (
-                    <li key={line.productId} className="flex gap-3 text-sm">
+                    <li key={line.key} className="flex gap-3 text-sm">
                       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-brand/10 text-[11px] font-bold text-brand">
                         ×{line.qty}
                       </span>
@@ -440,22 +465,37 @@ export function CheckoutModal({
                           {line.product.name}
                         </p>
                         <p className="text-xs text-muted">
-                          {formatPrice(line.product.price)} each
-                          {line.product.subscription > 0 &&
+                          {[
+                            line.picked.hardware?.name,
+                            ...line.picked.addOns.map((a) => `+ ${a.name}`),
+                            line.picked.plan &&
+                              (line.picked.bandwidth
+                                ? `${line.picked.plan.name} + ${line.picked.bandwidth.name}`
+                                : line.picked.plan.name),
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || `${formatPrice(line.picked.unitPrice)} each`}
+                          {line.subscriptionTotal > 0 &&
                             ` · ${formatPrice(line.product.subscription)}/mo`}
                         </p>
                       </div>
                       <span className="shrink-0 text-sm font-semibold text-ink">
-                        {formatPrice(line.lineTotal)}
+                        {formatPrice(line.lineTotal + line.planTotal)}
                       </span>
                     </li>
                   ))}
                 </ul>
                 <dl className="mt-4 space-y-1.5 text-sm">
                   <div className="flex items-center justify-between">
-                    <dt className="text-muted">Hardware</dt>
+                    <dt className="text-muted">Hardware &amp; add-ons</dt>
                     <dd className="font-semibold text-ink">{formatPrice(subtotal)}</dd>
                   </div>
+                  {planTotal > 0 && (
+                    <div className="flex items-center justify-between">
+                      <dt className="text-muted">Subscription (first period)</dt>
+                      <dd className="font-semibold text-ink">{formatPrice(planTotal)}</dd>
+                    </div>
+                  )}
                   {subscriptionTotal > 0 && (
                     <div className="flex items-center justify-between">
                       <dt className="text-muted">Monthly</dt>
@@ -470,7 +510,7 @@ export function CheckoutModal({
                     Total today
                   </span>
                   <span className="text-xl font-extrabold tracking-tight text-ink">
-                    {formatPrice(subtotal)}
+                    {formatPrice(total)}
                   </span>
                 </div>
               </aside>
@@ -544,7 +584,7 @@ export function CheckoutModal({
                   "Verify email to order"
                 ) : (
                   <>
-                    Place Order — {formatPrice(subtotal)} <Icon name="arrow" className="h-4 w-4" />
+                    Place Order — {formatPrice(total)} <Icon name="arrow" className="h-4 w-4" />
                   </>
                 )}
               </Button>

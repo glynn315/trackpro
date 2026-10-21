@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { InvoiceEditor } from "@/components/invoice/InvoiceEditor";
 import { adminGet } from "@/lib/admin/api";
 import type { SalesInvoice } from "@/lib/admin/types";
-import { InvoiceEditor } from "./InvoiceEditor";
+import { resetInvoice, saveInvoice } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         </Link>
       </PageHeader>
       <div className="p-5 lg:p-8">
-        <InvoiceEditor orderId={Number(id)} initial={data} initiallyEdited={edited} />
+        <InvoiceEditor
+          initial={data}
+          initiallyEdited={edited}
+          onSave={saveInvoice.bind(null, Number(id))}
+          onReset={resetInvoice.bind(null, Number(id))}
+        />
       </div>
     </>
   );

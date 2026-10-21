@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useCart } from "@/lib/cart";
+import { useCart, type CartLine } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { formatPrice, siteConfig } from "@/lib/site";
+import { periodWord } from "@/lib/cart-options";
 import { CheckoutModal } from "@/components/ui/CheckoutModal";
 import { AuthModal } from "@/components/ui/AuthModal";
 
@@ -17,6 +18,8 @@ export function CartDrawer() {
     lines,
     itemCount,
     subtotal,
+    planTotal,
+    total,
     subscriptionTotal,
     setQty,
     removeItem,
@@ -131,7 +134,7 @@ export function CartDrawer() {
               <ul className="space-y-4">
                 {lines.map((line) => (
                   <li
-                    key={line.productId}
+                    key={line.key}
                     className="flex gap-3 rounded-xl border border-line bg-white p-3"
                   >
                     <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-brand/10 text-brand">
@@ -144,10 +147,11 @@ export function CartDrawer() {
                             {line.product.name}
                           </p>
                           <p className="text-xs text-muted">{line.product.model}</p>
+                          <LineOptions line={line} />
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeItem(line.productId)}
+                          onClick={() => removeItem(line.key)}
                           aria-label={`Remove ${line.product.name}`}
                           className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted transition-colors hover:bg-soft hover:text-brand"
                         >
@@ -159,13 +163,18 @@ export function CartDrawer() {
                       <div className="mt-2 flex items-center justify-between">
                         <QtyControl
                           qty={line.qty}
-                          onChange={(q) => setQty(line.productId, q)}
+                          onChange={(q) => setQty(line.key, q)}
                           label={line.product.name}
                         />
                         <div className="text-right">
                           <p className="text-sm font-semibold text-ink">
-                            {formatPrice(line.lineTotal)}
+                            {formatPrice(line.lineTotal + line.planTotal)}
                           </p>
+                          {line.picked.plan && (
+                            <p className="text-[11px] text-muted">
+                              then {formatPrice(line.planTotal)}/{periodWord(line.picked.months) === "year" ? "yr" : "mo"}
+                            </p>
+                          )}
                           {line.subscriptionTotal > 0 && (
                             <p className="text-[11px] text-muted">
                               + {formatPrice(line.subscriptionTotal)}/mo
@@ -193,9 +202,15 @@ export function CartDrawer() {
             <footer className="border-t border-line bg-cloud p-5 sm:p-6">
               <dl className="space-y-1.5 text-sm">
                 <div className="flex items-center justify-between">
-                  <dt className="text-muted">Hardware subtotal</dt>
+                  <dt className="text-muted">Hardware &amp; add-ons</dt>
                   <dd className="font-semibold text-ink">{formatPrice(subtotal)}</dd>
                 </div>
+                {planTotal > 0 && (
+                  <div className="flex items-center justify-between">
+                    <dt className="text-muted">Platform subscription (first period)</dt>
+                    <dd className="font-semibold text-ink">{formatPrice(planTotal)}</dd>
+                  </div>
+                )}
                 {subscriptionTotal > 0 && (
                   <div className="flex items-center justify-between">
                     <dt className="text-muted">Monthly subscription</dt>
@@ -210,7 +225,7 @@ export function CartDrawer() {
                   Total today
                 </span>
                 <span className="text-2xl font-extrabold tracking-tight text-ink">
-                  {formatPrice(subtotal)}
+                  {formatPrice(total)}
                 </span>
               </div>
               <Button
@@ -285,6 +300,24 @@ export function CartDrawer() {
       )}
     </>,
     document.body
+  );
+}
+
+/** What was picked for a cart line: hardware option, add-ons, plan + bandwidth. */
+function LineOptions({ line }: { line: CartLine }) {
+  const { hardware, addOns, plan, bandwidth } = line.picked;
+  const parts = [
+    hardware?.name,
+    ...addOns.map((a) => `+ ${a.name}`),
+    plan && (bandwidth ? `${plan.name} + ${bandwidth.name}` : plan.name),
+  ].filter(Boolean);
+  if (parts.length === 0) return null;
+  return (
+    <ul className="mt-1 space-y-0.5 text-[11px] text-ink/80">
+      {parts.map((p) => (
+        <li key={p as string}>{p}</li>
+      ))}
+    </ul>
   );
 }
 
