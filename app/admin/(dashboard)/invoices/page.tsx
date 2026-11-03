@@ -11,6 +11,22 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 }
 
+/** Paid invoices are in Sales Reports; unpaid ones are not sales yet. */
+function PaidBadge({ paidAt, method }: { paidAt: string | null; method: string | null }) {
+  return paidAt ? (
+    <span
+      title={`Paid ${new Date(paidAt).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" })} · in Sales Reports`}
+      className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-emerald-800"
+    >
+      Paid{method ? ` · ${method}` : ""}
+    </span>
+  ) : (
+    <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-800">
+      Unpaid
+    </span>
+  );
+}
+
 /** Invoices written from scratch in the invoice editor. */
 export default async function InvoicesPage({
   searchParams,
@@ -50,7 +66,8 @@ export default async function InvoicesPage({
         )}
 
         <p className="mb-4 max-w-2xl text-sm text-gray-500">
-          Write, save and print invoices for sales and services outside the online store. Every invoice, including
+          Write, save and print invoices for sales and services outside the online store. Open an invoice and{" "}
+          <strong>Mark as Paid</strong> once the money comes in — it then counts as a sale in Sales Reports. Every invoice, including
           order and renewal invoices, starts from your <Link href="/admin/invoices/template" className="font-semibold text-brand hover:underline">invoice template</Link>.
           Order and renewal invoices are edited from their own pages (Orders → Invoice / Print, Subscriptions →
           Renewal Billing).
@@ -79,13 +96,14 @@ export default async function InvoicesPage({
                 <th className="px-5 py-3">Number</th>
                 <th className="px-5 py-3">Customer</th>
                 <th className="px-5 py-3">Date</th>
+                <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3 text-right">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {data.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-5 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-500">
                     {sp.search ? "No invoices found." : "No invoices yet — create one with New Invoice."}
                   </td>
                 </tr>
@@ -101,6 +119,9 @@ export default async function InvoicesPage({
                     {i.company && <p className="text-xs text-gray-500">{i.company}</p>}
                   </td>
                   <td className="px-5 py-3 text-gray-700">{fmtDate(i.date)}</td>
+                  <td className="px-5 py-3">
+                    <PaidBadge paidAt={i.paid_at} method={i.payment_method} />
+                  </td>
                   <td className="px-5 py-3 text-right font-semibold">{peso(i.total)}</td>
                 </tr>
               ))}
@@ -125,6 +146,9 @@ export default async function InvoicesPage({
                 {i.customer_name}
                 {i.company && ` · ${i.company}`} · {fmtDate(i.date)}
               </p>
+              <div className="mt-1.5">
+                <PaidBadge paidAt={i.paid_at} method={i.payment_method} />
+              </div>
             </Link>
           ))}
         </div>

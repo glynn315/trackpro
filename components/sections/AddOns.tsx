@@ -21,7 +21,14 @@ export async function AddOns() {
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
                 <Icon name={a.icon} className="h-5 w-5" />
               </span>
-              <span className="text-xl font-extrabold tracking-tight text-ink">{formatPrice(a.price)}</span>
+              <span className="text-right">
+                <span className="block text-xl font-extrabold tracking-tight text-ink">{formatPrice(a.price)}</span>
+                {a.installationPrice > 0 && (
+                  <span className="block text-[11px] font-semibold text-muted">
+                    + {formatPrice(a.installationPrice)} installation
+                  </span>
+                )}
+              </span>
             </div>
             <h3 className="mt-4 text-base font-bold uppercase tracking-tight text-ink">{a.name}</h3>
             <p className="text-xs font-medium italic text-muted">{a.subtitle}</p>

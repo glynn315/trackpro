@@ -57,7 +57,9 @@ export function CheckoutModal({
         `• ${l.qty} × ${l.product.name} (${l.product.model}) — ${formatPrice(l.lineTotal + l.planTotal)}` +
           (l.subscriptionTotal > 0 ? ` + ${formatPrice(l.subscriptionTotal)}/mo` : ""),
         hardware ? `    Hardware: ${hardware.name}` : "",
-        addOns.length ? `    Add-ons: ${addOns.map((a) => a.name).join(", ")}` : "",
+        addOns.length
+          ? `    Add-ons: ${addOns.map((a) => `${a.name}${a.withInstallation ? " (with installation)" : ""}`).join(", ")}`
+          : "",
         plan ? `    Subscription: ${plan.name} (${plan.billing_period})` : "",
         bandwidth ? `    Video bandwidth: ${bandwidth.name}` : "",
       ].filter(Boolean);
@@ -111,6 +113,7 @@ export function CheckoutModal({
         options: {
           hardware: l.options.hardware,
           add_ons: l.options.addOns,
+          add_ons_installation: l.options.installation,
           bandwidth: l.options.bandwidth,
           plan: l.options.plan,
         },
@@ -467,7 +470,7 @@ export function CheckoutModal({
                         <p className="text-xs text-muted">
                           {[
                             line.picked.hardware?.name,
-                            ...line.picked.addOns.map((a) => `+ ${a.name}`),
+                            ...line.picked.addOns.map((a) => `+ ${a.name}${a.withInstallation ? " (with installation)" : ""}`),
                             line.picked.plan &&
                               (line.picked.bandwidth
                                 ? `${line.picked.plan.name} + ${line.picked.bandwidth.name}`

@@ -13,6 +13,7 @@ import {
   type CartOptions,
 } from "@/lib/cart-options";
 import type { CatalogProduct } from "@/lib/products";
+import type { StoreAddOn } from "@/lib/addons";
 
 /**
  * Add-to-cart options for one product: Hardware (required), Add-ons,
@@ -44,6 +45,8 @@ export function ProductOptionsModal({
   }));
   const [qty, setQty] = useState(1);
   const [tried, setTried] = useState(false);
+  // An add-on that offers installation was ticked — ask whether to include it before it goes in.
+  const [askInstall, setAskInstall] = useState<StoreAddOn | null>(null);
 
   const picked = priceSelection(product, options, store);
   const maxQty = product.stock ?? 100;
@@ -51,22 +54,47 @@ export function ProductOptionsModal({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      // Esc closes the installation prompt first, then the options popup.
+      if (askInstall) setAskInstall(null);
+      else onClose();
     };
     document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose, askInstall]);
+
+  useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [onClose]);
+  }, []);
 
-  function toggleAddOn(slug: string) {
-    setOptions((o) => {
-      const list = o.addOns ?? [];
-      return { ...o, addOns: list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug] };
-    });
+  function toggleAddOn(addOn: StoreAddOn) {
+    const slug = addOn.slug;
+    if (options.addOns?.includes(slug)) {
+      // Un-tick: drop it and any installation picked for it.
+      setOptions((o) => ({
+        ...o,
+        addOns: (o.addOns ?? []).filter((s) => s !== slug),
+        installation: (o.installation ?? []).filter((s) => s !== slug),
+      }));
+      return;
+    }
+    // Every add-on asks whether to include installation before it goes in.
+    setAskInstall(addOn);
+  }
+
+  function selectAddOn(slug: string, withInstallation: boolean) {
+    setOptions((o) => ({
+      ...o,
+      addOns: [...(o.addOns ?? []).filter((s) => s !== slug), slug],
+      installation: withInstallation
+        ? [...(o.installation ?? []).filter((s) => s !== slug), slug]
+        : (o.installation ?? []).filter((s) => s !== slug),
+    }));
+    setAskInstall(null);
   }
 
   function add() {
@@ -143,19 +171,33 @@ export function ProductOptionsModal({
           {choices.addOns.length > 0 && (
             <Section title="Add-ons" hint="Optional · one-time">
               <div className="grid gap-2 sm:grid-cols-2">
-                {choices.addOns.map((a) => (
-                  <Choice
-                    key={a.slug}
-                    selected={options.addOns?.includes(a.slug) ?? false}
-                    onClick={() => toggleAddOn(a.slug)}
-                    title={a.name}
-                    subtitle={a.subtitle}
-                    price={`+${formatPrice(a.price)}`}
-                    image={a.media.find((m) => m.type === "image")?.url}
-                    icon={a.icon}
-                  />
-                ))}
+                {choices.addOns.map((a) => {
+                  const chosen = picked.addOns.find((p) => p.slug === a.slug);
+                  return (
+                    <Choice
+                      key={a.slug}
+                      selected={Boolean(chosen)}
+                      onClick={() => toggleAddOn(a)}
+                      title={a.name}
+                      subtitle={chosen ? (chosen.withInstallation ? "With installation" : "Without installation") : a.subtitle}
+                      price={
+                        chosen
+                          ? `+${formatPrice(chosen.total)}`
+                          : a.installationPrice > 0
+                            ? `+${formatPrice(a.price)} · install +${formatPrice(a.installationPrice)}`
+                            : `+${formatPrice(a.price)}`
+                      }
+                      image={a.media.find((m) => m.type === "image")?.url}
+                      icon={a.icon}
+                    />
+                  );
+                })}
               </div>
+              {picked.addOns.length > 0 && (
+                <p className="mt-2 text-[11px] text-muted">
+                  To change an add-on&apos;s installation choice, un-tick it and tick it again.
+                </p>
+              )}
             </Section>
           )}
 
@@ -220,7 +262,12 @@ export function ProductOptionsModal({
             <dl className="space-y-1.5 text-sm">
               <Row label={picked.hardware ? `Hardware — ${picked.hardware.name}` : "Hardware"} value={picked.hardware?.price ?? product.price} qty={qty} />
               {picked.addOns.map((a) => (
-                <Row key={a.slug} label={`Add-on — ${a.name}`} value={a.price} qty={qty} />
+                <Row
+                  key={a.slug}
+                  label={`Add-on — ${a.name}${a.withInstallation ? " (with installation)" : ""}`}
+                  value={a.total}
+                  qty={qty}
+                />
               ))}
               {picked.plan && (
                 <Row label={`${picked.plan.name} — first ${periodWord(picked.months)}`} value={picked.plan.price} qty={qty} />
@@ -256,8 +303,83 @@ export function ProductOptionsModal({
           </Button>
         </footer>
       </div>
+
+      {askInstall && (
+        <InstallationPrompt
+          addOn={askInstall}
+          onPick={(withInstallation) => selectAddOn(askInstall.slug, withInstallation)}
+          onCancel={() => setAskInstall(null)}
+        />
+      )}
     </div>,
     document.body
+  );
+}
+
+/** "Include installation?" — asked when an add-on that offers installation is ticked. */
+function InstallationPrompt({
+  addOn,
+  onPick,
+  onCancel,
+}: {
+  addOn: StoreAddOn;
+  onPick: (withInstallation: boolean) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Installation for ${addOn.name}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget) onCancel();
+      }}
+      className="animate-fade-in absolute inset-0 z-10 flex items-end justify-center bg-ink/60 p-4 sm:items-center"
+    >
+      <div className="animate-fade-up w-full max-w-xl rounded-2xl bg-white p-5 shadow-[0_28px_80px_-20px_rgba(0,0,0,0.4)] sm:p-6">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Add-on</p>
+        <h3 className="mt-0.5 text-lg font-extrabold tracking-tight text-ink">{addOn.name}</h3>
+        <p className="mt-1 text-sm text-muted">Would you like us to install it for you?</p>
+
+        <div className="mt-4 grid gap-2">
+          <button
+            type="button"
+            onClick={() => onPick(true)}
+            className="flex items-center justify-between gap-3 rounded-xl border border-brand bg-brand/5 p-3 text-left ring-1 ring-brand transition-colors hover:bg-brand/10"
+          >
+            <span>
+              <span className="block text-[13px] font-semibold text-ink">With installation</span>
+              <span className="block text-[11px] text-muted">
+                {addOn.installationPrice > 0
+                  ? `Add-on ${formatPrice(addOn.price)} + installation ${formatPrice(addOn.installationPrice)}`
+                  : "Our team installs it — no installation fee"}
+              </span>
+            </span>
+            <span className="shrink-0 whitespace-nowrap text-sm font-bold text-brand">+{formatPrice(addOn.price + addOn.installationPrice)}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onPick(false)}
+            className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3 text-left transition-colors hover:border-brand/40"
+          >
+            <span>
+              <span className="block text-[13px] font-semibold text-ink">Without installation</span>
+              <span className="block text-[11px] text-muted">Add-on only — you install it yourself</span>
+            </span>
+            <span className="shrink-0 whitespace-nowrap text-sm font-bold text-brand">+{formatPrice(addOn.price)}</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={onCancel}
+          className="mt-3 w-full rounded-full px-4 py-2 text-xs font-semibold text-muted transition-colors hover:bg-soft hover:text-ink"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
 

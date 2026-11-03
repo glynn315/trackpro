@@ -40,6 +40,33 @@ export async function saveInvoiceTemplate(invoice: SalesInvoice): Promise<Result
   return { ok: true, invoice: body.data, edited: true };
 }
 
+/** Record the invoice as paid — it then counts as a sale in Sales Reports. */
+export async function markCustomInvoicePaid(id: number, paymentMethod: string): Promise<{ ok: boolean; message?: string }> {
+  const res = await adminApi(`/api/admin/custom-invoices/${id}/mark-paid`, {
+    method: "POST",
+    json: { payment_method: paymentMethod || "manual" },
+  });
+  if (!res.ok) return failure(res, "Could not mark the invoice as paid");
+
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${id}`);
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+/** Undo "mark as paid" — the invoice leaves the sales reports again. */
+export async function unmarkCustomInvoicePaid(id: number): Promise<{ ok: boolean; message?: string }> {
+  const res = await adminApi(`/api/admin/custom-invoices/${id}/mark-paid`, { method: "DELETE" });
+  if (!res.ok) return failure(res, "Could not undo the payment");
+
+  revalidatePath("/admin/invoices");
+  revalidatePath(`/admin/invoices/${id}`);
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 export async function deleteCustomInvoice(id: number): Promise<Result> {
   const res = await adminApi(`/api/admin/custom-invoices/${id}`, { method: "DELETE" });
   if (!res.ok) return failure(res, "Could not delete the invoice");

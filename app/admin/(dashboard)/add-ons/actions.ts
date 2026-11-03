@@ -57,6 +57,8 @@ export async function saveAddOn(formData: FormData) {
     slug: str(formData.get("slug")) || null,
     subtitle: str(formData.get("subtitle")) || null,
     price: toInt(formData.get("price")),
+    // Blank / 0 = installation isn't offered for this add-on.
+    installation_price: toInt(formData.get("installation_price")) || null,
     icon: str(formData.get("icon")) || null,
     description: str(formData.get("description")) || null,
     features: lines(formData.get("features")),

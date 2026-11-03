@@ -336,6 +336,8 @@ export type AdminAddOn = {
   name: string;
   subtitle: string | null;
   price: number;
+  /** One-time installation fee offered with the add-on; null / 0 = not offered. */
+  installation_price: number | null;
   icon: string | null;
   description: string | null;
   features: string[] | null;
@@ -357,7 +359,7 @@ type SaleCustomer = {
   address: string | null;
 };
 
-/** One paid sale: an order payment, or a paid subscription renewal invoice. */
+/** One paid sale: an order payment, a paid subscription renewal invoice, or a hand-written invoice marked paid. */
 export type SaleTransaction = {
   id: number;
   paid_at: string;
@@ -377,6 +379,7 @@ export type SaleTransaction = {
         items: { name: string; model: string; qty: number; unit_price: number; line_total: number }[];
       };
       renewal: null;
+      custom: null;
     }
   | {
       type: "subscription";
@@ -391,6 +394,21 @@ export type SaleTransaction = {
         period_start: string;
         period_end: string;
       };
+      custom: null;
+    }
+  | {
+      type: "custom";
+      order: null;
+      renewal: null;
+      /** An invoice written in Admin → Invoices (a product or service sold outside the store). */
+      custom: {
+        id: number;
+        number: string;
+        title: string;
+        date: string;
+        discount: number;
+        items: { name: string; qty: number; unit_price: number; line_total: number }[];
+      };
     }
 );
 
@@ -404,7 +422,7 @@ export type TransactionsResponse = {
 export type TodaySalesResponse = {
   date: string;
   data: SaleTransaction[];
-  totals: { amount: number; count: number; orders: number; renewals: number };
+  totals: { amount: number; count: number; orders: number; renewals: number; invoices: number };
 };
 
 /** An editable invoice — a sales invoice for an order, or a renewal invoice's printout. */
@@ -443,8 +461,14 @@ export type CustomInvoiceSummary = {
   customer_name: string;
   company: string | null;
   total: number;
+  /** Set once the admin marks it paid — from then on it counts in the sales reports. */
+  paid_at: string | null;
+  payment_method: string | null;
   updated_at: string | null;
 };
+
+/** Paid state of a hand-written invoice. */
+export type CustomInvoicePayment = { paid: boolean; paid_at: string | null; payment_method: string | null };
 
 /** One renewal invoice with the billing details its printable copy needs. */
 export type AdminSubscriptionInvoiceDetail = AdminSubscriptionInvoice & {

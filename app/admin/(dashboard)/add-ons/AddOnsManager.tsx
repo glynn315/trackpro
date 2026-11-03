@@ -71,7 +71,12 @@ export function AddOnsManager({ addOns }: { addOns: AdminAddOn[] }) {
                   #{a.sort_order} · {a.slug}
                 </p>
               </div>
-              <p className="text-xl font-extrabold text-gray-900">{peso(a.price)}</p>
+              <div className="text-right">
+                <p className="text-xl font-extrabold text-gray-900">{peso(a.price)}</p>
+                <p className="text-[11px] font-semibold text-gray-500">
+                  {a.installation_price ? `+ ${peso(a.installation_price)} installation` : "Installation at no extra charge"}
+                </p>
+              </div>
             </div>
 
             {a.media && a.media.length > 0 && (
@@ -170,11 +175,30 @@ function AddOnForm({ addOn, onCancel }: { addOn: AdminAddOn | null; onCancel: ()
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="price">Price (₱)</Label>
             <input id="price" name="price" type="number" min={0} required defaultValue={addOn?.price ?? 0} className={inputCls} />
           </div>
+          <div>
+            <Label htmlFor="installation_price">Installation (₱)</Label>
+            <input
+              id="installation_price"
+              name="installation_price"
+              type="number"
+              min={0}
+              defaultValue={addOn?.installation_price ?? ""}
+              placeholder="Not offered"
+              className={inputCls}
+            />
+          </div>
+        </div>
+        <p className="-mt-1 text-[11px] text-gray-500">
+          Customers ticking this add-on in the cart are asked whether to include installation. This fee is added on
+          top when they say yes; leave it blank to offer installation at no extra charge.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="icon">Icon</Label>
             <select id="icon" name="icon" defaultValue={addOn?.icon ?? "check"} className={inputCls}>

@@ -13,8 +13,17 @@ import type { BandwidthPackage, CatalogProduct, HardwareOption } from "@/lib/pro
 export type CartOptions = {
   hardware?: string;
   addOns?: string[];
+  /** Add-ons (by slug, a subset of `addOns`) the customer wants installed — adds the installation fee. */
+  installation?: string[];
   bandwidth?: string;
   plan?: string;
+};
+
+/** A chosen add-on, with or without its installation. */
+export type PickedAddOn = StoreAddOn & {
+  withInstallation: boolean;
+  /** Add-on price plus the installation fee when chosen — what the line pays per unit. */
+  total: number;
 };
 
 /** Everything a product's options are chosen from. */
@@ -54,7 +63,7 @@ export function hasChoices(c: ProductChoices): boolean {
 
 export type PricedSelection = {
   hardware: HardwareOption | null;
-  addOns: StoreAddOn[];
+  addOns: PickedAddOn[];
   plan: StorePlan | null;
   bandwidth: BandwidthPackage | null;
   /** Hardware (or base price) + add-ons, per unit — one-time. */
@@ -74,7 +83,13 @@ export function priceSelection(product: CatalogProduct, options: CartOptions, st
   const hardware = c.hardware.find((h) => h.name === options.hardware) ?? null;
   if (c.hardware.length > 0 && !hardware) missing.push("hardware");
 
-  const addOns = c.addOns.filter((a) => options.addOns?.includes(a.slug));
+  const addOns: PickedAddOn[] = c.addOns
+    .filter((a) => options.addOns?.includes(a.slug))
+    .map((a) => {
+      // The fee is 0 when the admin set none — the request is still recorded (mirrors CartPricing).
+      const withInstallation = options.installation?.includes(a.slug) ?? false;
+      return { ...a, withInstallation, total: a.price + (withInstallation ? a.installationPrice : 0) };
+    });
 
   const plan = c.plans.find((p) => p.slug === options.plan) ?? null;
   if (c.plans.length > 0 && !plan) missing.push("plan");
@@ -87,7 +102,7 @@ export function priceSelection(product: CatalogProduct, options: CartOptions, st
     addOns,
     plan,
     bandwidth,
-    unitPrice: (hardware?.price ?? product.price) + addOns.reduce((sum, a) => sum + a.price, 0),
+    unitPrice: (hardware?.price ?? product.price) + addOns.reduce((sum, a) => sum + a.total, 0),
     months,
     planUnit: plan ? plan.price + (bandwidth?.price ?? 0) * months : 0,
     missing,
@@ -99,6 +114,9 @@ export function cleanOptions(o: CartOptions): CartOptions | undefined {
   const out: CartOptions = {};
   if (o.hardware) out.hardware = o.hardware;
   if (o.addOns?.length) out.addOns = [...o.addOns].sort();
+  // Installation only for add-ons actually in the cart line.
+  const installation = o.installation?.filter((s) => out.addOns?.includes(s)) ?? [];
+  if (installation.length) out.installation = [...installation].sort();
   if (o.plan) out.plan = o.plan;
   if (o.plan && o.bandwidth) out.bandwidth = o.bandwidth;
   return Object.keys(out).length ? out : undefined;

@@ -80,12 +80,20 @@ const fmtDay = (day: string) =>
 /* ------------------------------------------------------------ sale rows */
 
 function invoiceHref(s: SaleTransaction) {
+  if (s.type === "custom") return `/admin/invoices/${s.custom.id}`;
   return s.type === "order" ? `/admin/reports/invoice/${s.order.id}` : `/admin/subscriptions/billing/${s.renewal.id}`;
 }
 
 function referenceHref(s: SaleTransaction) {
+  if (s.type === "custom") return `/admin/invoices/${s.custom.id}`;
   return s.type === "order" ? `/admin/orders/${s.order.id}` : `/admin/subscriptions/billing/${s.renewal.id}`;
 }
+
+function referenceOf(s: SaleTransaction) {
+  return s.type === "order" ? s.order.reference : s.type === "subscription" ? s.renewal.reference : s.custom.number;
+}
+
+const KIND_LABEL: Record<SaleTransaction["type"], string> = { order: "Order", subscription: "Subscription", custom: "Invoice" };
 
 /** What was bought, as one product line plus a muted detail line. */
 function productOf(s: SaleTransaction): { name: string; detail: string; qty: number } {
@@ -94,6 +102,18 @@ function productOf(s: SaleTransaction): { name: string; detail: string; qty: num
       name: `${s.renewal.plan_name ?? "Subscription"} plan`,
       detail: `Renewal · ${fmtDate(s.renewal.period_start)} – ${fmtDate(serviceEndDate(s.renewal.period_end))}`,
       qty: s.renewal.quantity ?? 1,
+    };
+  }
+  if (s.type === "custom") {
+    const items = s.custom.items;
+    const extra = [
+      items.length > 1 ? `+${items.length - 1} more item${items.length > 2 ? "s" : ""}` : null,
+      s.custom.discount > 0 ? `less ${peso(s.custom.discount)} discount` : null,
+    ].filter(Boolean);
+    return {
+      name: items[0]?.name ?? s.custom.title,
+      detail: extra.length ? extra.join(" · ") : items[0] ? `${peso(items[0].unit_price)} each` : "",
+      qty: items.reduce((n, i) => n + i.qty, 0) || 1,
     };
   }
   const items = s.order.items;
@@ -139,9 +159,9 @@ function ReferenceCell({ sale: s }: { sale: SaleTransaction }) {
   return (
     <div>
       <Link href={referenceHref(s)} className="font-mono text-xs font-semibold text-gray-900 hover:text-brand">
-        {s.type === "order" ? s.order.reference : s.renewal.reference}
+        {referenceOf(s)}
       </Link>
-      <p className="text-xs text-gray-400">{s.type === "order" ? "Order" : "Subscription"}</p>
+      <p className="text-xs text-gray-400">{KIND_LABEL[s.type]}</p>
     </div>
   );
 }
@@ -238,7 +258,7 @@ function SalesRows({ sales, when }: { sales: SaleTransaction[]; when: "time" | "
                 <p className="text-xs text-gray-400">
                   {stamp(s)} ·{" "}
                   <Link href={referenceHref(s)} className="font-mono hover:text-brand">
-                    {s.type === "order" ? s.order.reference : s.renewal.reference}
+                    {referenceOf(s)}
                   </Link>
                 </p>
               </div>
@@ -279,9 +299,9 @@ function TodayLog({ log }: { log: TodaySalesResponse }) {
             <dd className="text-base font-extrabold text-gray-900">{totals.count}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Orders · Renewals</dt>
+            <dt className="text-gray-500">Orders · Renewals · Invoices</dt>
             <dd className="text-base font-extrabold text-gray-900">
-              {totals.orders} · {totals.renewals}
+              {totals.orders} · {totals.renewals} · {totals.invoices}
             </dd>
           </div>
           <div>
@@ -295,7 +315,7 @@ function TodayLog({ log }: { log: TodaySalesResponse }) {
         <div className="px-5 py-10 text-center">
           <p className="text-sm font-semibold text-gray-700">No sales yet today</p>
           <p className="mt-1 text-xs text-gray-500">
-            Paid orders and subscription payments show up here as soon as they come in.
+            Paid orders, subscription payments and hand-written invoices marked paid show up here as soon as they come in.
           </p>
         </div>
       ) : (

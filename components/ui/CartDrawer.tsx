@@ -308,7 +308,7 @@ function LineOptions({ line }: { line: CartLine }) {
   const { hardware, addOns, plan, bandwidth } = line.picked;
   const parts = [
     hardware?.name,
-    ...addOns.map((a) => `+ ${a.name}`),
+    ...addOns.map((a) => `+ ${a.name}${a.withInstallation ? " (with installation)" : ""}`),
     plan && (bandwidth ? `${plan.name} + ${bandwidth.name}` : plan.name),
   ].filter(Boolean);
   if (parts.length === 0) return null;

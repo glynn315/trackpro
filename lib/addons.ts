@@ -9,6 +9,8 @@ export type StoreAddOn = {
   name: string;
   subtitle: string;
   price: number;
+  /** One-time fee to have it installed; 0 = installation not offered. */
+  installationPrice: number;
   icon: IconName;
   description: string;
   features: readonly string[];
@@ -22,6 +24,7 @@ type ApiAddOn = {
   name: string;
   subtitle: string | null;
   price: number;
+  installation_price?: number | null;
   icon: string | null;
   description: string | null;
   features: string[] | null;
@@ -39,13 +42,23 @@ const KNOWN_ICONS = new Set<string>(iconNames);
  */
 export async function getAddOns(): Promise<StoreAddOn[]> {
   const live = await fetchLiveAddOns();
-  if (!live) return staticAddOns.map((a) => ({ ...a, slug: a.name, icon: toIcon(a.icon), media: [], warranty: "1 Year Warranty" }));
+  if (!live) {
+    return staticAddOns.map((a) => ({
+      ...a,
+      slug: a.name,
+      installationPrice: 0,
+      icon: toIcon(a.icon),
+      media: [],
+      warranty: "1 Year Warranty",
+    }));
+  }
 
   return live.map((a) => ({
     slug: a.slug,
     name: a.name,
     subtitle: a.subtitle ?? "",
     price: a.price,
+    installationPrice: Math.max(0, a.installation_price ?? 0),
     icon: toIcon(a.icon),
     description: a.description ?? "",
     features: a.features ?? [],
